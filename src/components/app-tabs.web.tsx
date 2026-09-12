@@ -53,7 +53,7 @@ export function TabButton({ children, isFocused, icon, ...props }: TabButtonProp
       <ThemedView
         type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
         style={[styles.tabButtonView, styles.tabButtonRow]}>
-        <Icon name={icon} size={16} color={isFocused ? theme.text : theme.textSecondary} />
+        <Icon name={icon} size={20} color={isFocused ? theme.text : theme.textSecondary} />
         <ThemedText type="small" themeColor={isFocused ? 'text' : 'textSecondary'}>
           {children}
         </ThemedText>

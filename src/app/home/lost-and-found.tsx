@@ -80,7 +80,7 @@ export default function LostAndFoundScreen() {
                     in {item.location}
                   </ThemedText>
                   <Pressable hitSlop={8}>
-                    <Icon name="more" size={24} color={theme.text} />
+                    <Icon name="more" size={26} color={theme.text} />
                   </Pressable>
                 </View>
                 <ThemedText type="small" themeColor="textMuted">
@@ -92,11 +92,11 @@ export default function LostAndFoundScreen() {
                 <ThemedText style={styles.description}>{item.description}</ThemedText>
                 <View style={styles.actions}>
                   <View style={styles.actionItem}>
-                    <Icon name="heart" size={20} color={theme.text} />
+                    <Icon name="heart" size={22} color={theme.text} />
                     <ThemedText style={styles.actionLabel}>{item.likes} likes</ThemedText>
                   </View>
                   <View style={styles.actionItem}>
-                    <Icon name="comments" size={20} color={theme.text} />
+                    <Icon name="comments" size={22} color={theme.text} />
                     <ThemedText style={styles.actionLabel}>{item.actionLabel}</ThemedText>
                   </View>
                 </View>

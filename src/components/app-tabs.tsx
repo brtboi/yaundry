@@ -40,7 +40,7 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Label>Support</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           src={require('@/assets/images/tabIcons/tech-support.png')}
-          renderingMode="original"
+          renderingMode="template"
         />
       </NativeTabs.Trigger>
 

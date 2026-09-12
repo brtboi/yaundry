@@ -46,7 +46,7 @@ export default function BookingScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={[styles.searchBar, { backgroundColor: theme.backgroundElement }]}>
-          <Icon name="search" size={24} color={theme.textMuted} />
+          <Icon name="search" size={26} color={theme.textMuted} />
           <View style={styles.searchText}>
             <ThemedText style={styles.searchTitle}>Saybrook</ThemedText>
             <ThemedText type="small" themeColor="textMuted">
@@ -63,7 +63,7 @@ export default function BookingScreen() {
             </View>
           </View>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Icon name="edit" size={22} color={theme.text} />
+            <Icon name="edit" size={24} color={theme.text} />
           </Pressable>
         </View>
 
@@ -113,13 +113,13 @@ export default function BookingScreen() {
                 <ThemedText style={styles.listingName}>{listing.name}</ThemedText>
                 <View style={styles.listingMetaRow}>
                   <View style={styles.listingMeta}>
-                    <Icon name="star" size={16} color={theme.textMuted} />
+                    <Icon name="star" size={18} color={theme.textMuted} />
                     <ThemedText type="small" themeColor="textMuted">
                       {listing.rating}
                     </ThemedText>
                   </View>
                   <View style={styles.listingMeta}>
-                    <Icon name="map-pin" size={16} color={theme.textMuted} />
+                    <Icon name="map-pin" size={18} color={theme.textMuted} />
                     <ThemedText type="small" themeColor="textMuted">
                       {listing.distance}
                     </ThemedText>
