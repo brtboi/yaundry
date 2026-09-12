@@ -10,10 +10,12 @@ import { SymbolView } from 'expo-symbols';
 import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
 
 import { ExternalLink } from './external-link';
+import { Icon } from './icon';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
   return (
@@ -21,11 +23,20 @@ export default function AppTabs() {
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
         <CustomTabList>
-          <TabTrigger name="home" href="/" asChild>
-            <TabButton>Home</TabButton>
+          <TabTrigger name="home" href="/home" asChild>
+            <TabButton icon="home">Home</TabButton>
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
+          <TabTrigger name="lost-and-found" href="/home/lost-and-found" asChild>
+            <TabButton icon="lost-found">Lost & Found</TabButton>
+          </TabTrigger>
+          <TabTrigger name="leaderboard" href="/home/leaderboard" asChild>
+            <TabButton icon="leaderboard">Leaderboard</TabButton>
+          </TabTrigger>
+          <TabTrigger name="tech-support" href="/home/tech-support" asChild>
+            <TabButton icon="tech-support">Support</TabButton>
+          </TabTrigger>
+          <TabTrigger name="profile" href="/home/profile" asChild>
+            <TabButton icon="person">Profile</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -33,12 +44,16 @@ export default function AppTabs() {
   );
 }
 
-export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+type TabButtonProps = TabTriggerSlotProps & { icon: import('./icon').IconName };
+
+export function TabButton({ children, isFocused, icon, ...props }: TabButtonProps) {
+  const theme = useTheme();
   return (
     <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView
         type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
-        style={styles.tabButtonView}>
+        style={[styles.tabButtonView, styles.tabButtonRow]}>
+        <Icon name={icon} size={16} color={isFocused ? theme.text : theme.textSecondary} />
         <ThemedText type="small" themeColor={isFocused ? 'text' : 'textSecondary'}>
           {children}
         </ThemedText>
@@ -55,7 +70,7 @@ export function CustomTabList(props: TabListProps) {
     <View {...props} style={styles.tabListContainer}>
       <ThemedView type="backgroundElement" style={styles.innerContainer}>
         <ThemedText type="smallBold" style={styles.brandText}>
-          Expo Starter
+          Yaundry
         </ThemedText>
 
         {props.children}
@@ -104,6 +119,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.three,
     borderRadius: Spacing.three,
+  },
+  tabButtonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
   },
   externalPressable: {
     flexDirection: 'row',
