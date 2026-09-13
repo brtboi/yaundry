@@ -50,14 +50,22 @@ export function TabButton({ children, isFocused, icon, ...props }: TabButtonProp
   const theme = useTheme();
   return (
     <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView
-        type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
-        style={[styles.tabButtonView, styles.tabButtonRow]}>
-        <Icon name={icon} size={20} color={isFocused ? theme.text : theme.textSecondary} />
-        <ThemedText type="small" themeColor={isFocused ? 'text' : 'textSecondary'}>
+      <View
+        style={[
+          styles.tabButtonView,
+          styles.tabButtonRow,
+          { backgroundColor: isFocused ? theme.accentTrack : 'transparent' },
+        ]}>
+        <Icon
+          name={icon}
+          filled={isFocused}
+          size={20}
+          color={isFocused ? theme.accent : theme.textSecondary}
+        />
+        <ThemedText type="small" themeColor={isFocused ? 'accent' : 'textSecondary'}>
           {children}
         </ThemedText>
-      </ThemedView>
+      </View>
     </Pressable>
   );
 }
@@ -108,6 +116,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: Spacing.two,
     maxWidth: MaxContentWidth,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   brandText: {
     marginRight: 'auto',
