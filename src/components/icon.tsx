@@ -10,7 +10,9 @@ import {
   lostFoundSvg,
   mapPinSvg,
   moreSvg,
+  notificationsSvg,
   personSvg,
+  scheduleSvg,
   searchSvg,
   starSvg,
   techSupportSvg,
@@ -30,6 +32,8 @@ const icons = {
   heart: heartOutlineSvg,
   comments: commentsSvg,
   more: moreSvg,
+  notifications: notificationsSvg,
+  schedule: scheduleSvg,
 } as const;
 
 export type IconName = keyof typeof icons;

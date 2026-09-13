@@ -3,6 +3,8 @@ import { type ReactNode, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Icon, type IconName } from '@/components/icon';
+import { NotificationToast, type NotificationPreview } from '@/components/notification-toast';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
@@ -12,6 +14,32 @@ const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const defaultActiveDays = [1, 3];
 const appearanceOptions = ['Light', 'Dark', 'System'] as const;
 
+type NotificationDemo = NotificationPreview & { id: string; blurb: string };
+
+const notificationDemos: NotificationDemo[] = [
+  {
+    id: 'ping',
+    icon: 'comments',
+    title: 'Blueberry pinged you',
+    message: '"Hey, is my laundry still in the dryer?" · Tap to reply',
+    blurb: 'Ping notifications',
+  },
+  {
+    id: 'free-machine',
+    icon: 'schedule',
+    title: 'A dryer just opened up',
+    message: 'JE Laundry has a free dryer during your 6:00 PM preferred time.',
+    blurb: 'Free machine at preferred time',
+  },
+  {
+    id: 'pickup',
+    icon: 'notifications',
+    title: 'Your laundry is done',
+    message: "Washer 3 finished 2 min ago — swing by before someone else needs it.",
+    blurb: 'Pickup reminders',
+  },
+];
+
 export default function ProfileScreen() {
   const theme = useTheme();
   const [identity, setIdentity] = useState<'fruit' | 'real'>('fruit');
@@ -20,6 +48,7 @@ export default function ProfileScreen() {
   const [freeMachineAlert, setFreeMachineAlert] = useState(true);
   const [activeDays, setActiveDays] = useState<number[]>(defaultActiveDays);
   const [appearance, setAppearance] = useState<(typeof appearanceOptions)[number]>('Light');
+  const [previewNotification, setPreviewNotification] = useState<NotificationPreview | null>(null);
 
   function toggleDay(index: number) {
     setActiveDays((current) =>
@@ -115,6 +144,22 @@ export default function ProfileScreen() {
             <SelectRow value="Connect" />
           </Section>
 
+          <Section label="Preview Notifications">
+            <ThemedText type="small" themeColor="textMuted">
+              See what these alerts will look like once they're live.
+            </ThemedText>
+            <View style={styles.demoList}>
+              {notificationDemos.map((demo) => (
+                <DemoButton
+                  key={demo.id}
+                  icon={demo.icon}
+                  label={demo.blurb}
+                  onPress={() => setPreviewNotification(demo)}
+                />
+              ))}
+            </View>
+          </Section>
+
           <Section label="Appearance">
             <View style={[styles.segmented, { backgroundColor: theme.backgroundElement }]}>
               {appearanceOptions.map((option) => (
@@ -142,7 +187,40 @@ export default function ProfileScreen() {
           </Pressable>
         </ScrollView>
       </SafeAreaView>
+
+      <NotificationToast
+        data={previewNotification}
+        onDismiss={() => setPreviewNotification(null)}
+      />
     </ThemedView>
+  );
+}
+
+function DemoButton({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  onPress: () => void;
+}) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.demoButton,
+        { borderColor: theme.cardBorder, opacity: pressed ? 0.7 : 1 },
+      ]}>
+      <View style={[styles.demoIconBadge, { backgroundColor: theme.backgroundElement }]}>
+        <Icon name={icon} size={18} color={theme.text} />
+      </View>
+      <ThemedText style={styles.demoLabel}>{label}</ThemedText>
+      <ThemedText type="small" themeColor="textMuted">
+        Preview
+      </ThemedText>
+    </Pressable>
   );
 }
 
@@ -334,6 +412,31 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontSize: 13,
+    fontWeight: '500',
+  },
+  demoList: {
+    gap: Spacing.two,
+    marginTop: Spacing.two,
+  },
+  demoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  demoIconBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  demoLabel: {
+    flex: 1,
+    fontSize: 14,
     fontWeight: '500',
   },
   selectRow: {
