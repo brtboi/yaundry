@@ -13,8 +13,10 @@ import {
   lostFoundSvg,
   mapPinSvg,
   moreSvg,
+  notificationsSvg,
   personOutlineSvg,
   personSvg,
+  scheduleSvg,
   searchSvg,
   starSvg,
   techSupportOutlineSvg,
@@ -42,8 +44,10 @@ const icons = {
   heart: heartOutlineSvg,
   comments: commentsSvg,
   more: moreSvg,
+  notifications: notificationsSvg,
+  schedule: scheduleSvg,
 } as { [K in FillableIconName]: string } & Record<
-  'google' | 'search' | 'edit' | 'star' | 'map-pin' | 'heart' | 'comments' | 'more',
+  'google' | 'search' | 'edit' | 'star' | 'map-pin' | 'heart' | 'comments' | 'more' | 'notifications' | 'schedule',
   string
 >;
 
