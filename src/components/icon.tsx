@@ -4,6 +4,7 @@ import {
   commentsSvg,
   editSvg,
   googleLogoSvg,
+  heartFilledSvg,
   heartOutlineSvg,
   homeSvg,
   leaderboardSvg,
@@ -28,6 +29,7 @@ const icons = {
   star: starSvg,
   'map-pin': mapPinSvg,
   heart: heartOutlineSvg,
+  'heart-filled': heartFilledSvg,
   comments: commentsSvg,
   more: moreSvg,
 } as const;
