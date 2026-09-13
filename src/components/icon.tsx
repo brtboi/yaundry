@@ -4,6 +4,7 @@ import {
   commentsSvg,
   editSvg,
   googleLogoSvg,
+  heartFilledSvg,
   heartOutlineSvg,
   homeOutlineSvg,
   homeSvg,
@@ -42,12 +43,23 @@ const icons = {
   star: starSvg,
   'map-pin': mapPinSvg,
   heart: heartOutlineSvg,
+  'heart-filled': heartFilledSvg,
   comments: commentsSvg,
   more: moreSvg,
   notifications: notificationsSvg,
   schedule: scheduleSvg,
 } as { [K in FillableIconName]: string } & Record<
-  'google' | 'search' | 'edit' | 'star' | 'map-pin' | 'heart' | 'comments' | 'more' | 'notifications' | 'schedule',
+  | 'google'
+  | 'search'
+  | 'edit'
+  | 'star'
+  | 'map-pin'
+  | 'heart'
+  | 'heart-filled'
+  | 'comments'
+  | 'more'
+  | 'notifications'
+  | 'schedule',
   string
 >;
 
