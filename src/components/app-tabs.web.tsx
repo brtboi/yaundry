@@ -1,3 +1,4 @@
+import { router, usePathname } from 'expo-router';
 import {
   Tabs,
   TabList,
@@ -7,7 +8,8 @@ import {
   TabListProps,
 } from 'expo-router/ui';
 import { SymbolView } from 'expo-symbols';
-import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
+import { useRef } from 'react';
+import { Pressable, useColorScheme, View, StyleSheet, PanResponder } from 'react-native';
 
 import { ExternalLink } from './external-link';
 import { Icon } from './icon';
@@ -17,10 +19,21 @@ import { ThemedView } from './themed-view';
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+// Order tabs are shown in the bar, and swiped through, left to right.
+const tabRoutes = [
+  '/home',
+  '/home/lost-and-found',
+  '/home/leaderboard',
+  '/home/tech-support',
+  '/home/profile',
+] as const;
+
+const SWIPE_DISTANCE_THRESHOLD = 60;
+
 export default function AppTabs() {
   return (
     <Tabs>
-      <TabSlot style={{ height: '100%' }} />
+      <SwipeableTabSlot />
       <TabList asChild>
         <CustomTabList>
           <TabTrigger name="home" href="/home" asChild>
@@ -42,6 +55,33 @@ export default function AppTabs() {
       </TabList>
     </Tabs>
   );
+}
+
+/** Wraps the active tab's screen so a horizontal drag switches to the next/previous tab. */
+function SwipeableTabSlot() {
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_evt, gesture) =>
+        Math.abs(gesture.dx) > 20 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5,
+      onPanResponderRelease: (_evt, gesture) => {
+        if (Math.abs(gesture.dx) < SWIPE_DISTANCE_THRESHOLD) return;
+
+        const currentIndex = tabRoutes.indexOf(pathnameRef.current as (typeof tabRoutes)[number]);
+        if (currentIndex === -1) return;
+
+        const nextIndex = gesture.dx < 0 ? currentIndex + 1 : currentIndex - 1;
+        if (nextIndex < 0 || nextIndex >= tabRoutes.length) return;
+
+        router.push(tabRoutes[nextIndex]);
+      },
+    }),
+  ).current;
+
+  return <TabSlot style={{ height: '100%' }} {...panResponder.panHandlers} />;
 }
 
 type TabButtonProps = TabTriggerSlotProps & { icon: import('./icon').IconName };
