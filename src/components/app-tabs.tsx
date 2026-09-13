@@ -9,12 +9,15 @@ export default function AppTabs() {
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
 
   // Material Symbols: outline icon by default, filled icon once the tab is selected.
+  // Rendered as template (alpha-mask) icons so the OS tints them live from `iconColor`
+  // below — baking a fixed color into the icon itself doesn't react to dark mode changes.
   function tabIcon(name: FillableIconName) {
     return (
       <NativeTabs.Trigger.Icon
+        renderingMode="template"
         src={{
-          default: <Icon name={name} size={24} color={colors.textSecondary} />,
-          selected: <Icon name={name} filled size={24} color={colors.accent} />,
+          default: <Icon name={name} size={24} color="#000000" />,
+          selected: <Icon name={name} filled size={24} color="#000000" />,
         }}
       />
     );
@@ -24,6 +27,7 @@ export default function AppTabs() {
     <NativeTabs
       backgroundColor={colors.background}
       indicatorColor={colors.backgroundElement}
+      iconColor={{ default: colors.textSecondary, selected: colors.accent }}
       labelStyle={{ selected: { color: colors.text } }}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>

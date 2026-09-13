@@ -8,11 +8,24 @@ import { NotificationToast, type NotificationPreview } from '@/components/notifi
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
+import { type ColorSchemeOverride, useColorSchemeOverride } from '@/hooks/color-scheme-context';
 import { useTheme } from '@/hooks/use-theme';
 
 const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const defaultActiveDays = [1, 3];
 const appearanceOptions = ['Light', 'Dark', 'System'] as const;
+
+function overrideToOption(override: ColorSchemeOverride): (typeof appearanceOptions)[number] {
+  if (override === 'light') return 'Light';
+  if (override === 'dark') return 'Dark';
+  return 'System';
+}
+
+function optionToOverride(option: (typeof appearanceOptions)[number]): ColorSchemeOverride {
+  if (option === 'Light') return 'light';
+  if (option === 'Dark') return 'dark';
+  return null;
+}
 
 type NotificationDemo = NotificationPreview & { id: string; blurb: string };
 
@@ -47,7 +60,8 @@ export default function ProfileScreen() {
   const [pickupReminders, setPickupReminders] = useState(true);
   const [freeMachineAlert, setFreeMachineAlert] = useState(true);
   const [activeDays, setActiveDays] = useState<number[]>(defaultActiveDays);
-  const [appearance, setAppearance] = useState<(typeof appearanceOptions)[number]>('Light');
+  const { override, setOverride } = useColorSchemeOverride();
+  const appearance = overrideToOption(override);
   const [previewNotification, setPreviewNotification] = useState<NotificationPreview | null>(null);
 
   function toggleDay(index: number) {
@@ -165,7 +179,7 @@ export default function ProfileScreen() {
               {appearanceOptions.map((option) => (
                 <Pressable
                   key={option}
-                  onPress={() => setAppearance(option)}
+                  onPress={() => setOverride(optionToOverride(option))}
                   style={[
                     styles.segment,
                     appearance === option && { backgroundColor: theme.text },

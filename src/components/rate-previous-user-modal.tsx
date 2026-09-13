@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { useSwipeToDismiss } from '@/hooks/use-swipe-to-dismiss';
 import { useTheme } from '@/hooks/use-theme';
 
 const quickTags = [
@@ -27,6 +28,7 @@ export function RatePreviousUserModal({
   const theme = useTheme();
   const [rating, setRating] = useState<'up' | 'down' | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const { translateY, panHandlers } = useSwipeToDismiss(handleSkip);
 
   function toggleTag(tag: string) {
     setSelectedTags((current) =>
@@ -54,8 +56,9 @@ export function RatePreviousUserModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleSkip}>
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleSkip} />
+        <Animated.View style={{ transform: [{ translateY }] }}>
         <ThemedView style={[styles.sheet, { backgroundColor: theme.card }]}>
-          <View style={styles.handleRow}>
+          <View style={styles.handleRow} {...panHandlers}>
             <View style={[styles.handle, { backgroundColor: theme.cardBorder }]} />
           </View>
 
@@ -124,6 +127,7 @@ export function RatePreviousUserModal({
             </ThemedText>
           </Pressable>
         </ThemedView>
+        </Animated.View>
       </View>
     </Modal>
   );

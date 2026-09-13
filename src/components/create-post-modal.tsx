@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Alert,
+  Animated,
   Modal,
   Pressable,
   ScrollView,
@@ -13,6 +14,7 @@ import {
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { useSwipeToDismiss } from '@/hooks/use-swipe-to-dismiss';
 import { useTheme } from '@/hooks/use-theme';
 
 export const rescoOptions = [
@@ -53,6 +55,7 @@ export function CreatePostModal({
   const [spotDescription, setSpotDescription] = useState('');
   const [isSensitive, setIsSensitive] = useState(false);
   const [hasPhoto, setHasPhoto] = useState(false);
+  const { translateY, panHandlers } = useSwipeToDismiss(handleClose);
 
   useEffect(() => {
     if (visible) setResco(defaultResco);
@@ -89,8 +92,9 @@ export function CreatePostModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
+        <Animated.View style={{ transform: [{ translateY }] }}>
         <ThemedView style={[styles.sheet, { backgroundColor: theme.card }]}>
-          <View style={styles.handleRow}>
+          <View style={styles.handleRow} {...panHandlers}>
             <View style={[styles.handle, { backgroundColor: theme.cardBorder }]} />
           </View>
 
@@ -195,6 +199,7 @@ export function CreatePostModal({
             </Pressable>
           </ScrollView>
         </ThemedView>
+        </Animated.View>
       </View>
     </Modal>
   );

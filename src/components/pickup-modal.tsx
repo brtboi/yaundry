@@ -1,10 +1,11 @@
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
+import { useSwipeToDismiss } from '@/hooks/use-swipe-to-dismiss';
 import { useTheme } from '@/hooks/use-theme';
 
 type PingState = 'idle' | 'sent' | 'responded' | 'picked-up';
@@ -26,6 +27,7 @@ export function PickupModal({
 }: PickupModalProps) {
   const theme = useTheme();
   const [pingState, setPingState] = useState<PingState>('idle');
+  const { translateY, panHandlers } = useSwipeToDismiss(onClose);
 
   useEffect(() => {
     if (!visible) setPingState('idle');
@@ -47,88 +49,92 @@ export function PickupModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <ThemedView style={[styles.sheet, { backgroundColor: theme.card }]}>
-          <View style={styles.handleRow}>
-            <View style={[styles.handle, { backgroundColor: theme.cardBorder }]} />
-          </View>
+        <Animated.View style={{ transform: [{ translateY }] }}>
+          <ThemedView style={[styles.sheet, { backgroundColor: theme.card }]}>
+            <View style={styles.handleRow} {...panHandlers}>
+              <View style={[styles.handle, { backgroundColor: theme.cardBorder }]} />
+            </View>
 
-          <View style={styles.header}>
-            <View style={styles.titleGroup}>
-              <ThemedText style={styles.title}>{machineLabel}</ThemedText>
-              <View style={[styles.pill, { backgroundColor: theme.pickup }]}>
-                <ThemedText style={[styles.pillText, { color: theme.pickupText }]}>
-                  Awaiting Pickup
+            <View style={styles.header}>
+              <View style={styles.titleGroup}>
+                <ThemedText style={styles.title}>{machineLabel}</ThemedText>
+                <View style={[styles.pill, { backgroundColor: theme.pickup }]}>
+                  <ThemedText style={[styles.pillText, { color: theme.pickupText }]}>
+                    Awaiting Pickup
+                  </ThemedText>
+                </View>
+              </View>
+              <Pressable
+                onPress={onClose}
+                style={[styles.closeButton, { backgroundColor: theme.backgroundElement }]}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  X
+                </ThemedText>
+              </Pressable>
+            </View>
+
+            <View style={styles.ownerRow}>
+              <Image
+                source={require('@/assets/images/illustrations/avatar-blueberry.png')}
+                style={[styles.avatar, { backgroundColor: theme.backgroundElement }]}
+                contentFit="cover"
+              />
+              <View style={styles.ownerCopy}>
+                <ThemedText style={styles.ownerName}>{ownerName}</ThemedText>
+                <ThemedText type="small" themeColor="textMuted">
+                  {finishedAgo}
                 </ThemedText>
               </View>
             </View>
-            <Pressable
-              onPress={onClose}
-              style={[styles.closeButton, { backgroundColor: theme.backgroundElement }]}>
-              <ThemedText type="small" themeColor="textSecondary">
-                X
-              </ThemedText>
-            </Pressable>
-          </View>
 
-          <View style={styles.ownerRow}>
-            <Image
-              source={require('@/assets/images/illustrations/avatar-blueberry.png')}
-              style={[styles.avatar, { backgroundColor: theme.backgroundElement }]}
-              contentFit="cover"
-            />
-            <View style={styles.ownerCopy}>
-              <ThemedText style={styles.ownerName}>{ownerName}</ThemedText>
-              <ThemedText type="small" themeColor="textMuted">
-                {finishedAgo}
-              </ThemedText>
+            {pingState === 'idle' && (
+              <Pressable
+                onPress={() => setPingState('sent')}
+                style={({ pressed }) => [
+                  styles.pingButton,
+                  { backgroundColor: theme.text, opacity: pressed ? 0.85 : 1 },
+                ]}>
+                <ThemedText style={[styles.pingButtonLabel, { color: theme.background }]}>
+                  Ping {ownerName}
+                </ThemedText>
+              </Pressable>
+            )}
+
+            {pingState === 'sent' && (
+              <View style={[styles.pingButton, { backgroundColor: theme.backgroundElement }]}>
+                <ThemedText style={styles.pingButtonLabel}>Ping Sent!</ThemedText>
+              </View>
+            )}
+
+            {pingState === 'responded' && (
+              <View style={styles.respondedRow}>
+                <ThemedText style={styles.respondedText} themeColor="textSecondary">
+                  Responded: omw!
+                </ThemedText>
+              </View>
+            )}
+
+            {pingState === 'picked-up' && (
+              <Pressable onPress={onClose} style={styles.respondedRow}>
+                <ThemedText
+                  style={[styles.respondedText, styles.pickedUpText]}
+                  themeColor="textSecondary">
+                  {ownerName} picked their laundry up!
+                </ThemedText>
+              </Pressable>
+            )}
+
+            <View style={styles.dismissRow}>
+              <Pressable onPress={onClose}>
+                <ThemedText type="small" themeColor="textMuted">
+                  {pingState === 'sent' && 'Wait 3 minutes for another ping....'}
+                  {pingState === 'picked-up' && 'No thanks....'}
+                  {(pingState === 'idle' || pingState === 'responded') && 'Not now'}
+                </ThemedText>
+              </Pressable>
             </View>
-          </View>
-
-          {pingState === 'idle' && (
-            <Pressable
-              onPress={() => setPingState('sent')}
-              style={({ pressed }) => [
-                styles.pingButton,
-                { backgroundColor: theme.text, opacity: pressed ? 0.85 : 1 },
-              ]}>
-              <ThemedText style={[styles.pingButtonLabel, { color: theme.background }]}>
-                Ping {ownerName}
-              </ThemedText>
-            </Pressable>
-          )}
-
-          {pingState === 'sent' && (
-            <View style={[styles.pingButton, { backgroundColor: theme.backgroundElement }]}>
-              <ThemedText style={styles.pingButtonLabel}>Ping Sent!</ThemedText>
-            </View>
-          )}
-
-          {pingState === 'responded' && (
-            <View style={styles.respondedRow}>
-              <ThemedText style={styles.respondedText} themeColor="textSecondary">
-                Responded: omw!
-              </ThemedText>
-            </View>
-          )}
-
-          {pingState === 'picked-up' && (
-            <Pressable onPress={onClose} style={styles.respondedRow}>
-              <ThemedText style={[styles.respondedText, styles.pickedUpText]} themeColor="textSecondary">
-                {ownerName} picked their laundry up!
-              </ThemedText>
-            </Pressable>
-          )}
-
-          <View style={styles.dismissRow}>
-            <Pressable onPress={onClose}>
-              <ThemedText type="small" themeColor="textMuted">
-                {pingState === 'sent' && 'Wait 3 minutes for another ping....'}
-                {pingState === 'picked-up' && 'No thanks....'}
-                {(pingState === 'idle' || pingState === 'responded') && 'Not now'}
-              </ThemedText>
-            </Pressable>
-          </View>
-        </ThemedView>
+          </ThemedView>
+        </Animated.View>
       </View>
     </Modal>
   );

@@ -9,7 +9,14 @@ import {
 } from 'expo-router/ui';
 import { SymbolView } from 'expo-symbols';
 import { useRef } from 'react';
-import { Pressable, useColorScheme, View, StyleSheet, PanResponder } from 'react-native';
+import {
+  Pressable,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+  StyleSheet,
+  PanResponder,
+} from 'react-native';
 
 import { ExternalLink } from './external-link';
 import { Icon } from './icon';
@@ -89,7 +96,9 @@ type TabButtonProps = TabTriggerSlotProps & { icon: import('./icon').IconName };
 export function TabButton({ children, isFocused, icon, ...props }: TabButtonProps) {
   const theme = useTheme();
   return (
-    <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable
+      {...props}
+      style={({ pressed }) => [styles.tabButtonPressable, pressed && styles.pressed]}>
       <View
         style={[
           styles.tabButtonView,
@@ -102,7 +111,11 @@ export function TabButton({ children, isFocused, icon, ...props }: TabButtonProp
           size={20}
           color={isFocused ? theme.accent : theme.textSecondary}
         />
-        <ThemedText type="small" themeColor={isFocused ? 'accent' : 'textSecondary'}>
+        <ThemedText
+          type="small"
+          numberOfLines={1}
+          style={styles.tabButtonLabel}
+          themeColor={isFocused ? 'accent' : 'textSecondary'}>
           {children}
         </ThemedText>
       </View>
@@ -110,29 +123,39 @@ export function TabButton({ children, isFocused, icon, ...props }: TabButtonProp
   );
 }
 
+// Below this width the brand wordmark and "Docs" link give up their space to the tabs,
+// which is what was getting clipped ("Lost & Found" being the longest label).
+const COMPACT_WIDTH_BREAKPOINT = 640;
+
 export function CustomTabList(props: TabListProps) {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const { width } = useWindowDimensions();
+  const isCompact = width < COMPACT_WIDTH_BREAKPOINT;
 
   return (
     <View {...props} style={styles.tabListContainer}>
       <ThemedView type="backgroundElement" style={styles.innerContainer}>
-        <ThemedText type="smallBold" style={styles.brandText}>
-          Yaundry
-        </ThemedText>
+        {!isCompact && (
+          <ThemedText type="smallBold" style={styles.brandText}>
+            Yaundry
+          </ThemedText>
+        )}
 
         {props.children}
 
-        <ExternalLink href="https://docs.expo.dev" asChild>
-          <Pressable style={styles.externalPressable}>
-            <ThemedText type="link">Docs</ThemedText>
-            <SymbolView
-              tintColor={colors.text}
-              name={{ ios: 'arrow.up.right.square', web: 'link' }}
-              size={12}
-            />
-          </Pressable>
-        </ExternalLink>
+        {!isCompact && (
+          <ExternalLink href="https://docs.expo.dev" asChild>
+            <Pressable style={styles.externalPressable}>
+              <ThemedText type="link">Docs</ThemedText>
+              <SymbolView
+                tintColor={colors.text}
+                name={{ ios: 'arrow.up.right.square', web: 'link' }}
+                size={12}
+              />
+            </Pressable>
+          </ExternalLink>
+        )}
       </ThemedView>
     </View>
   );
@@ -149,12 +172,12 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.five,
+    paddingHorizontal: Spacing.three,
     borderRadius: Spacing.five,
     flexDirection: 'row',
     alignItems: 'center',
     flexGrow: 1,
-    gap: Spacing.two,
+    gap: Spacing.one,
     maxWidth: MaxContentWidth,
     shadowColor: '#000',
     shadowOpacity: 0.08,
@@ -164,19 +187,29 @@ const styles = StyleSheet.create({
   },
   brandText: {
     marginRight: 'auto',
+    flexShrink: 0,
   },
   pressed: {
     opacity: 0.7,
   },
+  tabButtonPressable: {
+    flexShrink: 1,
+    minWidth: 0,
+  },
   tabButtonView: {
     paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.two,
     borderRadius: Spacing.three,
   },
   tabButtonRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.one,
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  tabButtonLabel: {
+    flexShrink: 1,
   },
   externalPressable: {
     flexDirection: 'row',
@@ -184,5 +217,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
     marginLeft: Spacing.three,
+    flexShrink: 0,
   },
 });
