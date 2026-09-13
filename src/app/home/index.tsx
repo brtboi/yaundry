@@ -1,14 +1,19 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PickupModal } from '@/components/pickup-modal';
+import { RatePreviousUserModal } from '@/components/rate-previous-user-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+
+// Module-scoped so the "you just opened the app" prompt only fires once per cold start,
+// not every time the Home tab remounts as you navigate around the app.
+let hasShownRatePromptThisSession = false;
 
 type MachineStatus = 'available' | 'in-use' | 'broken' | 'pickup';
 
@@ -46,6 +51,15 @@ const myMachines = [
 export default function HomeScreen() {
   const theme = useTheme();
   const [pickup, setPickup] = useState<{ kind: 'Washer' | 'Dryer'; id: number } | null>(null);
+  const [showRatePrompt, setShowRatePrompt] = useState(false);
+
+  useEffect(() => {
+    if (hasShownRatePromptThisSession || myMachines.length === 0) return;
+    hasShownRatePromptThisSession = true;
+
+    const timer = setTimeout(() => setShowRatePrompt(true), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <ThemedView style={styles.container}>
@@ -146,6 +160,12 @@ export default function HomeScreen() {
         visible={pickup !== null}
         machineLabel={pickup ? `${pickup.kind} ${pickup.id}` : ''}
         onClose={() => setPickup(null)}
+      />
+
+      <RatePreviousUserModal
+        visible={showRatePrompt}
+        machineLabel={myMachines[0]?.label ?? 'this machine'}
+        onClose={() => setShowRatePrompt(false)}
       />
     </ThemedView>
   );
