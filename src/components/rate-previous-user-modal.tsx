@@ -4,7 +4,7 @@ import { Alert, Animated, Modal, Pressable, StyleSheet, View } from 'react-nativ
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { useSwipeToDismiss } from '@/hooks/use-swipe-to-dismiss';
+import { useBottomSheetAnimation } from '@/hooks/use-bottom-sheet-animation';
 import { useTheme } from '@/hooks/use-theme';
 
 const quickTags = [
@@ -28,7 +28,10 @@ export function RatePreviousUserModal({
   const theme = useTheme();
   const [rating, setRating] = useState<'up' | 'down' | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const { translateY, panHandlers } = useSwipeToDismiss(handleSkip);
+  const { mounted, backdropOpacity, translateY, panHandlers, hide } = useBottomSheetAnimation(
+    visible,
+    onClose,
+  );
 
   function toggleTag(tag: string) {
     setSelectedTags((current) =>
@@ -43,19 +46,23 @@ export function RatePreviousUserModal({
 
   function handleSkip() {
     reset();
-    onClose();
+    hide();
   }
 
   function handleSubmit() {
     Alert.alert('Thanks!', 'Your feedback helps keep the laundry room running smoothly.');
     reset();
-    onClose();
+    hide();
   }
 
+  if (!mounted) return null;
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleSkip}>
-      <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={handleSkip} />
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={handleSkip}>
+      <View style={styles.root}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={handleSkip} />
+        </Animated.View>
         <Animated.View style={{ transform: [{ translateY }] }}>
         <ThemedView style={[styles.sheet, { backgroundColor: theme.card }]}>
           <View style={styles.handleRow} {...panHandlers}>
@@ -164,9 +171,11 @@ function ThumbButton({
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  root: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  backdrop: {
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {

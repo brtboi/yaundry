@@ -41,11 +41,13 @@ export function PingReceivedNotification({
   const opacity = useRef(new Animated.Value(0)).current;
   const [customOpen, setCustomOpen] = useState(false);
   const [customText, setCustomText] = useState('');
+  const [sentMessage, setSentMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!data) return;
     setCustomOpen(false);
     setCustomText('');
+    setSentMessage(null);
     Animated.parallel([
       Animated.spring(translateY, { toValue: 0, useNativeDriver: true, bounciness: 6 }),
       Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
@@ -64,7 +66,8 @@ export function PingReceivedNotification({
 
   function send(message: string) {
     onReply(message);
-    hide();
+    setSentMessage(message);
+    setTimeout(hide, 1800);
   }
 
   if (!data) return null;
@@ -89,55 +92,73 @@ export function PingReceivedNotification({
           </View>
 
           <ThemedText style={styles.sender}>{data.senderName}</ThemedText>
-          <ThemedText style={styles.message}>
-            pinged you to pick up your laundry — {data.location}
-          </ThemedText>
 
-          {!customOpen ? (
-            <>
-              {quickReplies.map((reply) => (
-                <Pressable
-                  key={reply.id}
-                  onPress={() => send(reply.label)}
-                  style={({ pressed }) => [styles.actionRow, pressed && styles.actionRowPressed]}>
-                  <ThemedText style={[styles.actionLabel, { color: actionColor }]}>
-                    {reply.label}
-                  </ThemedText>
-                </Pressable>
-              ))}
-              <Pressable
-                onPress={() => setCustomOpen(true)}
-                style={({ pressed }) => [styles.actionRow, pressed && styles.actionRowPressed]}>
-                <ThemedText style={[styles.actionLabel, { color: actionColor }]}>
-                  Custom
-                </ThemedText>
-              </Pressable>
-            </>
+          {sentMessage ? (
+            <ThemedText style={styles.message}>
+              You responded: {sentMessage}
+            </ThemedText>
           ) : (
-            <View style={styles.customRow}>
-              <TextInput
-                value={customText}
-                onChangeText={setCustomText}
-                placeholder="Type a reply…"
-                placeholderTextColor={mutedColor}
-                autoFocus
-                returnKeyType="send"
-                onSubmitEditing={() => customText.trim() && send(customText.trim())}
-                style={[styles.customInput, { color: theme.text, borderColor: dividerColor }]}
-              />
-              <Pressable
-                onPress={() => customText.trim() && send(customText.trim())}
-                disabled={!customText.trim()}
-                style={({ pressed }) => [styles.actionRow, pressed && styles.actionRowPressed]}>
-                <ThemedText
-                  style={[
-                    styles.actionLabel,
-                    { color: customText.trim() ? actionColor : mutedColor },
-                  ]}>
-                  Send
-                </ThemedText>
-              </Pressable>
-            </View>
+            <>
+              <ThemedText style={styles.message}>
+                pinged you to pick up your laundry — {data.location}
+              </ThemedText>
+
+              {!customOpen ? (
+                <>
+                  {quickReplies.map((reply) => (
+                    <Pressable
+                      key={reply.id}
+                      onPress={() => send(reply.label)}
+                      style={({ pressed }) => [
+                        styles.actionRow,
+                        pressed && styles.actionRowPressed,
+                      ]}>
+                      <ThemedText style={[styles.actionLabel, { color: actionColor }]}>
+                        {reply.label}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                  <Pressable
+                    onPress={() => setCustomOpen(true)}
+                    style={({ pressed }) => [
+                      styles.actionRow,
+                      pressed && styles.actionRowPressed,
+                    ]}>
+                    <ThemedText style={[styles.actionLabel, { color: actionColor }]}>
+                      Custom
+                    </ThemedText>
+                  </Pressable>
+                </>
+              ) : (
+                <View style={styles.customRow}>
+                  <TextInput
+                    value={customText}
+                    onChangeText={setCustomText}
+                    placeholder="Type a reply…"
+                    placeholderTextColor={mutedColor}
+                    autoFocus
+                    returnKeyType="send"
+                    onSubmitEditing={() => customText.trim() && send(customText.trim())}
+                    style={[styles.customInput, { color: theme.text, borderColor: dividerColor }]}
+                  />
+                  <Pressable
+                    onPress={() => customText.trim() && send(customText.trim())}
+                    disabled={!customText.trim()}
+                    style={({ pressed }) => [
+                      styles.actionRow,
+                      pressed && styles.actionRowPressed,
+                    ]}>
+                    <ThemedText
+                      style={[
+                        styles.actionLabel,
+                        { color: customText.trim() ? actionColor : mutedColor },
+                      ]}>
+                      Send
+                    </ThemedText>
+                  </Pressable>
+                </View>
+              )}
+            </>
           )}
 
           <View style={[styles.divider, { backgroundColor: dividerColor }]} />
@@ -208,6 +229,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   actionRow: {
+    width: '100%',
     paddingVertical: 13,
     borderRadius: 20,
     alignItems: 'center',
@@ -219,11 +241,14 @@ const styles = StyleSheet.create({
   actionLabel: {
     fontSize: 16,
     fontWeight: '500',
+    textAlign: 'center',
   },
   customRow: {
+    width: '100%',
     gap: 8,
   },
   customInput: {
+    width: '100%',
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 14,

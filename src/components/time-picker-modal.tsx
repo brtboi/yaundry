@@ -3,7 +3,7 @@ import { Animated, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { useSwipeToDismiss } from '@/hooks/use-swipe-to-dismiss';
+import { useBottomSheetAnimation } from '@/hooks/use-bottom-sheet-animation';
 import { useTheme } from '@/hooks/use-theme';
 
 export type TimeValue = { hour: number; minute: number; period: 'AM' | 'PM' };
@@ -25,16 +25,23 @@ type TimePickerModalProps = {
 
 export function TimePickerModal({ visible, value, onClose, onChange }: TimePickerModalProps) {
   const theme = useTheme();
-  const { translateY, panHandlers } = useSwipeToDismiss(onClose);
+  const { mounted, backdropOpacity, translateY, panHandlers, hide } = useBottomSheetAnimation(
+    visible,
+    onClose,
+  );
 
   function update(patch: Partial<TimeValue>) {
     onChange({ ...value, ...patch });
   }
 
+  if (!mounted) return null;
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={hide}>
+      <View style={styles.root}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={hide} />
+        </Animated.View>
         <Animated.View style={{ transform: [{ translateY }] }}>
           <ThemedView style={[styles.sheet, { backgroundColor: theme.card }]}>
             <View style={styles.handleRow} {...panHandlers}>
@@ -81,7 +88,7 @@ export function TimePickerModal({ visible, value, onClose, onChange }: TimePicke
             </View>
 
             <Pressable
-              onPress={onClose}
+              onPress={hide}
               style={({ pressed }) => [
                 styles.doneButton,
                 { backgroundColor: theme.text, opacity: pressed ? 0.85 : 1 },
@@ -115,9 +122,11 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  root: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  backdrop: {
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {

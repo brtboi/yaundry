@@ -114,6 +114,7 @@ export default function ProfileScreen() {
               onPress={handleFruityNicknamePress}
               label="Fruity Nickname"
               trailing={fruit.emoji}
+              showChevron={identity === 'fruit'}
             />
             <IdentityOption
               selected={identity === 'real'}
@@ -243,7 +244,7 @@ export default function ProfileScreen() {
       <PingReceivedNotification
         data={pingPreviewVisible ? pingDemo : null}
         onDismiss={() => setPingPreviewVisible(false)}
-        onReply={(message) => Alert.alert('Reply sent', `"${message}"`)}
+        onReply={() => {}}
       />
 
       <FruitPickerModal
@@ -310,11 +311,13 @@ function IdentityOption({
   onPress,
   label,
   trailing,
+  showChevron,
 }: {
   selected: boolean;
   onPress: () => void;
   label: string;
   trailing?: string;
+  showChevron?: boolean;
 }) {
   const theme = useTheme();
   return (
@@ -335,6 +338,11 @@ function IdentityOption({
       />
       <ThemedText style={styles.identityLabel}>{label}</ThemedText>
       {trailing && <ThemedText style={styles.identityTrailing}>{trailing}</ThemedText>}
+      {showChevron && (
+        <ThemedText themeColor="textMuted" style={styles.identityChevron}>
+          ›
+        </ThemedText>
+      )}
     </Pressable>
   );
 }
@@ -457,6 +465,10 @@ const styles = StyleSheet.create({
   },
   identityTrailing: {
     fontSize: 14,
+  },
+  identityChevron: {
+    fontSize: 16,
+    marginLeft: 2,
   },
   toggleRow: {
     flexDirection: 'row',

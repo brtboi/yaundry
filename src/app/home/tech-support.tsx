@@ -2,8 +2,10 @@ import { type ReactNode, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Dropdown } from '@/components/dropdown';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { rescoOptions } from '@/constants/rescos';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -44,6 +46,7 @@ const routingExplainer =
 
 export default function TechSupportScreen() {
   const theme = useTheme();
+  const [resco, setResco] = useState<string>(rescoOptions[0]);
   const [issueId, setIssueId] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState('');
   const [description, setDescription] = useState('');
@@ -74,7 +77,9 @@ export default function TechSupportScreen() {
           <ThemedText style={styles.headerTitle}>Tech Support</ThemedText>
         </View>
         <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
-          <SelectField label="RESIDENTIAL COLLEGE" value="Jonathan Edwards" />
+          <Field label="RESIDENTIAL COLLEGE">
+            <Dropdown value={resco} options={rescoOptions} onChange={setResco} />
+          </Field>
 
           <View style={styles.field}>
             <View style={styles.issueLabelRow}>

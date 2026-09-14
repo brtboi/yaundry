@@ -47,7 +47,7 @@ export default function AppTabs() {
       // changes so the OS tab bar actually picks up the new colors.
       key={theme}
       backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
+      indicatorColor={colors.accentTrack}
       iconColor={{ default: colors.textSecondary, selected: colors.accent }}
       labelStyle={{
         default: { fontSize: 10 },

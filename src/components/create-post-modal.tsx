@@ -11,22 +11,13 @@ import {
 } from 'react-native';
 
 import { AnimatedSwitch } from '@/components/animated-switch';
+import { Dropdown } from '@/components/dropdown';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { rescoOptions } from '@/constants/rescos';
 import { Spacing } from '@/constants/theme';
-import { useSwipeToDismiss } from '@/hooks/use-swipe-to-dismiss';
+import { useBottomSheetAnimation } from '@/hooks/use-bottom-sheet-animation';
 import { useTheme } from '@/hooks/use-theme';
-
-export const rescoOptions = [
-  'Jonathan Edwards',
-  'Saybrook',
-  'Benjamin Franklin',
-  'Berkeley',
-  'Branford',
-  'Davenport',
-  'Pauli Murray',
-  'Silliman',
-] as const;
 
 export type NewPostData = {
   resco: string;
@@ -55,7 +46,10 @@ export function CreatePostModal({
   const [spotDescription, setSpotDescription] = useState('');
   const [isSensitive, setIsSensitive] = useState(false);
   const [hasPhoto, setHasPhoto] = useState(false);
-  const { translateY, panHandlers } = useSwipeToDismiss(handleClose);
+  const { mounted, backdropOpacity, translateY, panHandlers, hide } = useBottomSheetAnimation(
+    visible,
+    onClose,
+  );
 
   useEffect(() => {
     if (visible) setResco(defaultResco);
@@ -70,7 +64,7 @@ export function CreatePostModal({
 
   function handleClose() {
     reset();
-    onClose();
+    hide();
   }
 
   function handleSubmit() {
@@ -85,13 +79,17 @@ export function CreatePostModal({
 
     onSubmit({ resco, description: description.trim(), spotDescription: spotDescription.trim(), isSensitive, hasPhoto });
     reset();
-    onClose();
+    hide();
   }
 
+  if (!mounted) return null;
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
-      <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={handleClose}>
+      <View style={styles.root}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
+        </Animated.View>
         <Animated.View style={{ transform: [{ translateY }] }}>
         <ThemedView style={[styles.sheet, { backgroundColor: theme.card }]}>
           <View style={styles.handleRow} {...panHandlers}>
@@ -111,29 +109,7 @@ export function CreatePostModal({
 
           <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
             <Field label="RESIDENTIAL COLLEGE">
-              <View style={styles.chipRow}>
-                {rescoOptions.map((option) => {
-                  const selected = option === resco;
-                  return (
-                    <Pressable
-                      key={option}
-                      onPress={() => setResco(option)}
-                      style={[
-                        styles.chip,
-                        {
-                          borderColor: selected ? theme.text : theme.cardBorder,
-                          backgroundColor: selected ? theme.text : 'transparent',
-                        },
-                      ]}>
-                      <ThemedText
-                        type="small"
-                        style={{ color: selected ? theme.background : theme.text }}>
-                        {option}
-                      </ThemedText>
-                    </Pressable>
-                  );
-                })}
-              </View>
+              <Dropdown value={resco} options={rescoOptions} onChange={setResco} />
             </Field>
 
             <Field label="WHAT DID YOU FIND?">
@@ -218,9 +194,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  root: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  backdrop: {
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {
@@ -265,17 +243,6 @@ const styles = StyleSheet.create({
   fieldLabel: {
     letterSpacing: 0.48,
     fontSize: 12,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chip: {
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
   },
   input: {
     borderWidth: 1,

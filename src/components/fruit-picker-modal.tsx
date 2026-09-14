@@ -3,7 +3,7 @@ import { Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { useSwipeToDismiss } from '@/hooks/use-swipe-to-dismiss';
+import { useBottomSheetAnimation } from '@/hooks/use-bottom-sheet-animation';
 import { useTheme } from '@/hooks/use-theme';
 
 export type FruitOption = { emoji: string; name: string };
@@ -32,12 +32,19 @@ type FruitPickerModalProps = {
 
 export function FruitPickerModal({ visible, selected, onClose, onSelect }: FruitPickerModalProps) {
   const theme = useTheme();
-  const { translateY, panHandlers } = useSwipeToDismiss(onClose);
+  const { mounted, backdropOpacity, translateY, panHandlers, hide } = useBottomSheetAnimation(
+    visible,
+    onClose,
+  );
+
+  if (!mounted) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={hide}>
+      <View style={styles.root}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={hide} />
+        </Animated.View>
         <Animated.View style={{ transform: [{ translateY }] }}>
           <ThemedView style={[styles.sheet, { backgroundColor: theme.card }]}>
             <View style={styles.handleRow} {...panHandlers}>
@@ -80,9 +87,11 @@ export function FruitPickerModal({ visible, selected, onClose, onSelect }: Fruit
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  root: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  backdrop: {
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {
@@ -108,18 +117,21 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: Spacing.two,
     marginTop: Spacing.one,
   },
   fruitCell: {
-    width: '30%',
+    width: 96,
     borderRadius: Spacing.two,
     paddingVertical: Spacing.two,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 4,
   },
   fruitEmoji: {
     fontSize: 28,
+    lineHeight: 36,
   },
   fruitName: {
     fontSize: 12,

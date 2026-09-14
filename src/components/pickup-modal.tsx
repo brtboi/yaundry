@@ -5,7 +5,7 @@ import { Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { useSwipeToDismiss } from '@/hooks/use-swipe-to-dismiss';
+import { useBottomSheetAnimation } from '@/hooks/use-bottom-sheet-animation';
 import { useTheme } from '@/hooks/use-theme';
 
 type PingState = 'idle' | 'sent' | 'responded' | 'picked-up';
@@ -27,7 +27,10 @@ export function PickupModal({
 }: PickupModalProps) {
   const theme = useTheme();
   const [pingState, setPingState] = useState<PingState>('idle');
-  const { translateY, panHandlers } = useSwipeToDismiss(onClose);
+  const { mounted, backdropOpacity, translateY, panHandlers, hide } = useBottomSheetAnimation(
+    visible,
+    onClose,
+  );
 
   useEffect(() => {
     if (!visible) setPingState('idle');
@@ -45,10 +48,14 @@ export function PickupModal({
     return () => clearTimeout(timer);
   }, [pingState]);
 
+  if (!mounted) return null;
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={hide}>
+      <View style={styles.root}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={hide} />
+        </Animated.View>
         <Animated.View style={{ transform: [{ translateY }] }}>
           <ThemedView style={[styles.sheet, { backgroundColor: theme.card }]}>
             <View style={styles.handleRow} {...panHandlers}>
@@ -65,7 +72,7 @@ export function PickupModal({
                 </View>
               </View>
               <Pressable
-                onPress={onClose}
+                onPress={hide}
                 style={[styles.closeButton, { backgroundColor: theme.backgroundElement }]}>
                 <ThemedText type="small" themeColor="textSecondary">
                   X
@@ -115,7 +122,7 @@ export function PickupModal({
             )}
 
             {pingState === 'picked-up' && (
-              <Pressable onPress={onClose} style={styles.respondedRow}>
+              <Pressable onPress={hide} style={styles.respondedRow}>
                 <ThemedText
                   style={[styles.respondedText, styles.pickedUpText]}
                   themeColor="textSecondary">
@@ -125,7 +132,7 @@ export function PickupModal({
             )}
 
             <View style={styles.dismissRow}>
-              <Pressable onPress={onClose}>
+              <Pressable onPress={hide}>
                 <ThemedText type="small" themeColor="textMuted">
                   {pingState === 'sent' && 'Wait 3 minutes for another ping....'}
                   {pingState === 'picked-up' && 'No thanks....'}
@@ -141,9 +148,11 @@ export function PickupModal({
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  root: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  backdrop: {
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {
