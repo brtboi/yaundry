@@ -1,12 +1,16 @@
 import { router } from 'expo-router';
 import { type ReactNode, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AnimatedSwitch } from '@/components/animated-switch';
+import { FruitPickerModal, fruitOptions, type FruitOption } from '@/components/fruit-picker-modal';
 import { Icon, type IconName } from '@/components/icon';
 import { NotificationToast, type NotificationPreview } from '@/components/notification-toast';
+import { PingReceivedNotification, type PingReceivedData } from '@/components/ping-received-notification';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { formatTime, TimePickerModal, type TimeValue } from '@/components/time-picker-modal';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
 import { type ColorSchemeOverride, useColorSchemeOverride } from '@/hooks/color-scheme-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -31,13 +35,6 @@ type NotificationDemo = NotificationPreview & { id: string; blurb: string };
 
 const notificationDemos: NotificationDemo[] = [
   {
-    id: 'ping',
-    icon: 'comments',
-    title: 'Blueberry pinged you',
-    message: '"Hey, is my laundry still in the dryer?" · Tap to reply',
-    blurb: 'Ping notifications',
-  },
-  {
     id: 'free-machine',
     icon: 'schedule',
     title: 'A dryer just opened up',
@@ -53,6 +50,11 @@ const notificationDemos: NotificationDemo[] = [
   },
 ];
 
+const pingDemo: PingReceivedData = {
+  senderName: 'Blueberry',
+  location: 'Jonathan Edwards, Washer 3',
+};
+
 export default function ProfileScreen() {
   const theme = useTheme();
   const [identity, setIdentity] = useState<'fruit' | 'real'>('fruit');
@@ -63,11 +65,24 @@ export default function ProfileScreen() {
   const { override, setOverride } = useColorSchemeOverride();
   const appearance = overrideToOption(override);
   const [previewNotification, setPreviewNotification] = useState<NotificationPreview | null>(null);
+  const [pingPreviewVisible, setPingPreviewVisible] = useState(false);
+  const [fruit, setFruit] = useState<FruitOption>(fruitOptions[0]);
+  const [fruitPickerVisible, setFruitPickerVisible] = useState(false);
+  const [preferredTime, setPreferredTime] = useState<TimeValue>({ hour: 6, minute: 0, period: 'PM' });
+  const [timePickerVisible, setTimePickerVisible] = useState(false);
 
   function toggleDay(index: number) {
     setActiveDays((current) =>
       current.includes(index) ? current.filter((d) => d !== index) : [...current, index],
     );
+  }
+
+  function handleFruityNicknamePress() {
+    if (identity === 'fruit') {
+      setFruitPickerVisible(true);
+    } else {
+      setIdentity('fruit');
+    }
   }
 
   return (
@@ -89,16 +104,16 @@ export default function ProfileScreen() {
             </View>
             <ThemedText style={styles.name}>Daniel Jay Park</ThemedText>
             <ThemedText type="small" themeColor="textMuted">
-              🍍 Pineapple
+              {fruit.emoji} {fruit.name}
             </ThemedText>
           </View>
 
           <Section label="Display Name">
             <IdentityOption
               selected={identity === 'fruit'}
-              onPress={() => setIdentity('fruit')}
+              onPress={handleFruityNicknamePress}
               label="Fruity Nickname"
-              trailing="🍍"
+              trailing={fruit.emoji}
             />
             <IdentityOption
               selected={identity === 'real'}
@@ -151,11 +166,24 @@ export default function ProfileScreen() {
                 );
               })}
             </View>
-            <SelectRow value="6:00 PM" />
+            <Pressable onPress={() => setTimePickerVisible(true)}>
+              <SelectRow value={formatTime(preferredTime)} />
+            </Pressable>
           </Section>
 
           <Section label="Connect GCal">
-            <SelectRow value="Connect" />
+            <Pressable
+              onPress={() =>
+                Alert.alert('Connect Google Calendar', 'Google Calendar sync is coming soon!')
+              }
+              style={({ pressed }) => [
+                styles.gcalButton,
+                { borderColor: theme.cardBorder, opacity: pressed ? 0.8 : 1 },
+              ]}>
+              <Icon name="google" size={18} />
+              <ThemedText style={styles.gcalLabel}>Connect Google Calendar</ThemedText>
+              <ThemedText themeColor="textMuted">{'›'}</ThemedText>
+            </Pressable>
           </Section>
 
           <Section label="Preview Notifications">
@@ -163,6 +191,11 @@ export default function ProfileScreen() {
               See what these alerts will look like once they're live.
             </ThemedText>
             <View style={styles.demoList}>
+              <DemoButton
+                icon="comments"
+                label="Ping notifications"
+                onPress={() => setPingPreviewVisible(true)}
+              />
               {notificationDemos.map((demo) => (
                 <DemoButton
                   key={demo.id}
@@ -205,6 +238,29 @@ export default function ProfileScreen() {
       <NotificationToast
         data={previewNotification}
         onDismiss={() => setPreviewNotification(null)}
+      />
+
+      <PingReceivedNotification
+        data={pingPreviewVisible ? pingDemo : null}
+        onDismiss={() => setPingPreviewVisible(false)}
+        onReply={(message) => Alert.alert('Reply sent', `"${message}"`)}
+      />
+
+      <FruitPickerModal
+        visible={fruitPickerVisible}
+        selected={fruit.name}
+        onClose={() => setFruitPickerVisible(false)}
+        onSelect={(next) => {
+          setFruit(next);
+          setFruitPickerVisible(false);
+        }}
+      />
+
+      <TimePickerModal
+        visible={timePickerVisible}
+        value={preferredTime}
+        onClose={() => setTimePickerVisible(false)}
+        onChange={setPreferredTime}
       />
     </ThemedView>
   );
@@ -296,10 +352,11 @@ function ToggleRow({
   return (
     <View style={styles.toggleRow}>
       <ThemedText style={styles.toggleLabel}>{label}</ThemedText>
-      <Switch
+      <AnimatedSwitch
         value={value}
         onValueChange={onChange}
-        trackColor={{ false: theme.backgroundSelected, true: theme.text }}
+        activeColor={theme.text}
+        inactiveColor={theme.backgroundSelected}
         thumbColor={theme.background}
       />
     </View>
@@ -465,6 +522,21 @@ const styles = StyleSheet.create({
   },
   selectValue: {
     fontSize: 14,
+  },
+  gcalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginTop: Spacing.two,
+  },
+  gcalLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
   },
   segmented: {
     flexDirection: 'row',

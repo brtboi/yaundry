@@ -1,24 +1,40 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import type { ComponentProps } from 'react';
 
-import { Icon, type FillableIconName } from '@/components/icon';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+
+// NativeTabs.Trigger.Icon only supports NativeTabs.Trigger.VectorIcon as a React-element
+// icon source (our custom SvgXml-based Icon component isn't supported there and silently
+// fails to render) — so the native tab bar uses this MaterialCommunityIcons mapping
+// instead of the Material Symbols SVGs used on web.
+type MaterialCommunityIconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
+
+const tabIconNames: Record<
+  'home' | 'lost-found' | 'leaderboard' | 'tech-support' | 'person',
+  { outline: MaterialCommunityIconName; filled: MaterialCommunityIconName }
+> = {
+  home: { outline: 'home-outline', filled: 'home' },
+  'lost-found': { outline: 'forum-outline', filled: 'forum' },
+  leaderboard: { outline: 'trophy-outline', filled: 'trophy' },
+  'tech-support': { outline: 'help-circle-outline', filled: 'help-circle' },
+  person: { outline: 'account-outline', filled: 'account' },
+};
 
 export default function AppTabs() {
   const scheme = useColorScheme();
   const theme = scheme === 'unspecified' || scheme == null ? 'light' : scheme;
   const colors = Colors[theme];
 
-  // Material Symbols: outline icon by default, filled icon once the tab is selected.
-  // Rendered as template (alpha-mask) icons so the OS tints them live from `iconColor`
-  // below — baking a fixed color into the icon itself doesn't react to dark mode changes.
-  function tabIcon(name: FillableIconName) {
+  // Outline icon by default, filled icon once the tab is selected.
+  function tabIcon(name: keyof typeof tabIconNames) {
+    const { outline, filled } = tabIconNames[name];
     return (
       <NativeTabs.Trigger.Icon
-        renderingMode="template"
         src={{
-          default: <Icon name={name} size={24} color="#000000" />,
-          selected: <Icon name={name} filled size={24} color="#000000" />,
+          default: <NativeTabs.Trigger.VectorIcon family={MaterialCommunityIcons} name={outline} />,
+          selected: <NativeTabs.Trigger.VectorIcon family={MaterialCommunityIcons} name={filled} />,
         }}
       />
     );
@@ -43,7 +59,7 @@ export default function AppTabs() {
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="lost-and-found">
-        <NativeTabs.Trigger.Label>Lost+Found</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Lost&Found</NativeTabs.Trigger.Label>
         {tabIcon('lost-found')}
       </NativeTabs.Trigger>
 

@@ -279,9 +279,9 @@ const styles = StyleSheet.create({
     width: 28,
   },
   headerTitle: {
-    fontSize: 14,
+    fontSize: 17,
     fontWeight: '600',
-    letterSpacing: -0.28,
+    letterSpacing: -0.34,
   },
   newPostButton: {
     width: 28,

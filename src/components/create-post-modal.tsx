@@ -6,11 +6,11 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   TextInput,
   View,
 } from 'react-native';
 
+import { AnimatedSwitch } from '@/components/animated-switch';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -179,10 +179,11 @@ export function CreatePostModal({
                   thumbnail and add a heads-up before anyone opens it.
                 </ThemedText>
               </View>
-              <Switch
+              <AnimatedSwitch
                 value={isSensitive}
                 onValueChange={setIsSensitive}
-                trackColor={{ false: theme.backgroundSelected, true: theme.text }}
+                activeColor={theme.text}
+                inactiveColor={theme.backgroundSelected}
                 thumbColor={theme.background}
               />
             </View>
