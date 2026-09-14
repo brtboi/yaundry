@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -15,6 +15,7 @@ type PickupModalProps = {
   ownerName?: string;
   finishedAgo?: string;
   onClose: () => void;
+  onPickedUp?: () => void;
 };
 
 export function PickupModal({
@@ -23,12 +24,20 @@ export function PickupModal({
   ownerName = 'Blueberry',
   finishedAgo = 'Finished 12 min ago',
   onClose,
+  onPickedUp,
 }: PickupModalProps) {
   const theme = useTheme();
   const [pingState, setPingState] = useState<PingState>('idle');
+  const [pointsAwarded, setPointsAwarded] = useState(false);
+  const onPickedUpRef = useRef(onPickedUp);
+  onPickedUpRef.current = onPickedUp;
+  const isAvailable = pingState === 'picked-up';
 
   useEffect(() => {
-    if (!visible) setPingState('idle');
+    if (!visible) {
+      setPingState('idle');
+      setPointsAwarded(false);
+    }
   }, [visible]);
 
   useEffect(() => {
@@ -39,7 +48,10 @@ export function PickupModal({
 
   useEffect(() => {
     if (pingState !== 'responded') return;
-    const timer = setTimeout(() => setPingState('picked-up'), 2500);
+    const timer = setTimeout(() => {
+      setPingState('picked-up');
+      onPickedUpRef.current?.();
+    }, 2500);
     return () => clearTimeout(timer);
   }, [pingState]);
 
@@ -55,9 +67,17 @@ export function PickupModal({
           <View style={styles.header}>
             <View style={styles.titleGroup}>
               <ThemedText style={styles.title}>{machineLabel}</ThemedText>
-              <View style={[styles.pill, { backgroundColor: theme.pickup }]}>
-                <ThemedText style={[styles.pillText, { color: theme.pickupText }]}>
-                  Awaiting Pickup
+              <View
+                style={[
+                  styles.pill,
+                  { backgroundColor: isAvailable ? theme.available : theme.pickup },
+                ]}>
+                <ThemedText
+                  style={[
+                    styles.pillText,
+                    { color: isAvailable ? theme.availableText : theme.pickupText },
+                  ]}>
+                  {isAvailable ? 'Available' : 'Awaiting Pickup'}
                 </ThemedText>
               </View>
             </View>
@@ -79,7 +99,7 @@ export function PickupModal({
             <View style={styles.ownerCopy}>
               <ThemedText style={styles.ownerName}>{ownerName}</ThemedText>
               <ThemedText type="small" themeColor="textMuted">
-                {finishedAgo}
+                {isAvailable ? 'Picked up just now' : finishedAgo}
               </ThemedText>
             </View>
           </View>
@@ -112,22 +132,44 @@ export function PickupModal({
           )}
 
           {pingState === 'picked-up' && (
-            <Pressable onPress={onClose} style={styles.respondedRow}>
-              <ThemedText style={[styles.respondedText, styles.pickedUpText]} themeColor="textSecondary">
-                {ownerName} picked their laundry up!
-              </ThemedText>
-            </Pressable>
+            <>
+              <View style={styles.respondedRow}>
+                <ThemedText style={[styles.respondedText, styles.pickedUpText]} themeColor="textSecondary">
+                  {ownerName} picked their laundry up!
+                </ThemedText>
+              </View>
+              <Pressable
+                disabled={pointsAwarded}
+                onPress={() => setPointsAwarded(true)}
+                style={({ pressed }) => [
+                  styles.pingButton,
+                  {
+                    backgroundColor: pointsAwarded ? theme.backgroundElement : theme.text,
+                    opacity: pressed && !pointsAwarded ? 0.85 : 1,
+                  },
+                ]}>
+                <ThemedText
+                  style={[
+                    styles.pingButtonLabel,
+                    { color: pointsAwarded ? theme.text : theme.background },
+                  ]}>
+                  {pointsAwarded ? 'Sent 10 points!' : `Send ${ownerName} 10 points`}
+                </ThemedText>
+              </Pressable>
+            </>
           )}
 
-          <View style={styles.dismissRow}>
-            <Pressable onPress={onClose}>
-              <ThemedText type="small" themeColor="textMuted">
-                {pingState === 'sent' && 'Wait 3 minutes for another ping....'}
-                {pingState === 'picked-up' && 'No thanks....'}
-                {(pingState === 'idle' || pingState === 'responded') && 'Not now'}
-              </ThemedText>
-            </Pressable>
-          </View>
+          {pingState !== 'responded' && (
+            <View style={styles.dismissRow}>
+              <Pressable onPress={onClose}>
+                <ThemedText type="small" themeColor="textMuted">
+                  {pingState === 'sent' && 'Wait 3 minutes for another ping....'}
+                  {pingState === 'picked-up' && (pointsAwarded ? 'Done' : 'No thanks....')}
+                  {pingState === 'idle' && 'Not now'}
+                </ThemedText>
+              </Pressable>
+            </View>
+          )}
         </ThemedView>
       </View>
     </Modal>

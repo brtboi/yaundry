@@ -1,14 +1,17 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PickupModal } from '@/components/pickup-modal';
+import { ReminderModal, type ReminderKind } from '@/components/reminder-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+
+const WASHES_BETWEEN_REMINDERS = 3;
 
 type MachineStatus = 'available' | 'in-use' | 'broken' | 'pickup';
 
@@ -16,19 +19,20 @@ type Machine = {
   id: number;
   status: MachineStatus;
   minutesLeft?: number;
+  mine?: boolean;
 };
 
-const washers: Machine[] = [
+const initialWashers: Machine[] = [
   { id: 1, status: 'available' },
-  { id: 2, status: 'pickup' },
-  { id: 3, status: 'in-use', minutesLeft: 15 },
-  { id: 4, status: 'in-use', minutesLeft: 14 },
+  { id: 2, status: 'pickup', mine: true },
+  { id: 3, status: 'in-use', minutesLeft: 15, mine: true },
+  { id: 4, status: 'in-use', minutesLeft: 14, mine: true },
   { id: 5, status: 'broken' },
 ];
 
-const dryers: Machine[] = [
-  { id: 1, status: 'in-use', minutesLeft: 8 },
-  { id: 2, status: 'available' },
+const initialDryers: Machine[] = [
+  { id: 1, status: 'in-use', minutesLeft: 8, mine: true },
+  { id: 2, status: 'in-use', minutesLeft: 22 },
   { id: 3, status: 'available' },
   { id: 4, status: 'broken' },
   { id: 5, status: 'pickup' },
@@ -45,7 +49,53 @@ const myMachines = [
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const [washers, setWashers] = useState(initialWashers);
+  const [dryers, setDryers] = useState(initialDryers);
   const [pickup, setPickup] = useState<{ kind: 'Washer' | 'Dryer'; id: number } | null>(null);
+  const [reminder, setReminder] = useState<ReminderKind | null>(null);
+  const [completedWashes, setCompletedWashes] = useState(0);
+  const lastReminderRef = useRef<ReminderKind | null>(null);
+
+  const showReminderIfDue = useCallback((nextCount: number) => {
+    if (nextCount % WASHES_BETWEEN_REMINDERS !== 0) return;
+    const kind: ReminderKind = lastReminderRef.current === 'lint' ? 'door' : 'lint';
+    lastReminderRef.current = kind;
+    setReminder(kind);
+  }, []);
+
+  const onMyWasherPress = useCallback(
+    (machine: Machine) => {
+      if (machine.status === 'in-use') {
+        setWashers((current) =>
+          current.map((item) =>
+            item.id === machine.id
+              ? { ...item, status: 'pickup' as const, minutesLeft: undefined }
+              : item
+          )
+        );
+      }
+      const nextCount = completedWashes + 1;
+      setCompletedWashes(nextCount);
+      showReminderIfDue(nextCount);
+    },
+    [completedWashes, showReminderIfDue]
+  );
+
+  const showNextReminderForDemo = useCallback(() => {
+    const kind: ReminderKind = lastReminderRef.current === 'lint' ? 'door' : 'lint';
+    lastReminderRef.current = kind;
+    setReminder(kind);
+  }, []);
+
+  const markPickupAvailable = useCallback(() => {
+    if (!pickup) return;
+    const update = (machines: Machine[]) =>
+      machines.map((machine) =>
+        machine.id === pickup.id ? { ...machine, status: 'available' as const } : machine
+      );
+    if (pickup.kind === 'Washer') setWashers(update);
+    else setDryers(update);
+  }, [pickup]);
 
   return (
     <ThemedView style={styles.container}>
@@ -65,9 +115,11 @@ export default function HomeScreen() {
         </Pressable>
 
         <ThemedView style={[styles.card, { borderColor: theme.cardBorder, backgroundColor: theme.card }]}>
-          <ThemedText type="small" themeColor="textMuted" style={styles.sectionLabel}>
-            MY MACHINES
-          </ThemedText>
+          <Pressable onPress={showNextReminderForDemo} accessibilityRole="button" accessibilityLabel="My machines">
+            <ThemedText type="small" themeColor="textMuted" style={styles.sectionLabel}>
+              MY MACHINES
+            </ThemedText>
+          </Pressable>
           <View style={styles.machinesList}>
             {myMachines.map((machine) => (
               <View key={machine.label} style={styles.progressItem}>
@@ -110,10 +162,13 @@ export default function HomeScreen() {
                   machine={machine}
                   flexGrow={machine.status !== 'in-use'}
                   onPress={
-                    machine.status === 'pickup'
-                      ? () => setPickup({ kind: 'Washer', id: machine.id })
-                      : undefined
+                    machine.mine && (machine.status === 'in-use' || machine.status === 'pickup')
+                      ? () => onMyWasherPress(machine)
+                      : machine.status === 'pickup'
+                        ? () => setPickup({ kind: 'Washer', id: machine.id })
+                        : undefined
                   }
+                  onLongPress={machine.mine ? showNextReminderForDemo : undefined}
                 />
               ))}
             </View>
@@ -130,7 +185,7 @@ export default function HomeScreen() {
                     machine={machine}
                     fill
                     onPress={
-                      machine.status === 'pickup'
+                      machine.status === 'pickup' && !machine.mine
                         ? () => setPickup({ kind: 'Dryer', id: machine.id })
                         : undefined
                     }
@@ -146,7 +201,9 @@ export default function HomeScreen() {
         visible={pickup !== null}
         machineLabel={pickup ? `${pickup.kind} ${pickup.id}` : ''}
         onClose={() => setPickup(null)}
+        onPickedUp={markPickupAvailable}
       />
+      <ReminderModal kind={reminder} onClose={() => setReminder(null)} />
     </ThemedView>
   );
 }
@@ -167,43 +224,61 @@ function MachineTile({
   flexGrow,
   fill,
   onPress,
+  onLongPress,
 }: {
   machine: Machine;
   flexGrow?: boolean;
   fill?: boolean;
   onPress?: () => void;
+  onLongPress?: () => void;
 }) {
   const theme = useTheme();
-  const palette: Record<MachineStatus, { bg: string; text: string; border?: string }> = {
+  const palette: Record<MachineStatus, { bg: string; text: string }> = {
     available: { bg: theme.available, text: theme.availableText },
-    'in-use': { bg: theme.inUse, text: theme.inUseText, border: theme.inUseBorder },
+    'in-use': { bg: theme.inUse, text: theme.inUseText },
     broken: { bg: theme.broken, text: theme.brokenText },
     pickup: { bg: theme.pickup, text: theme.pickupText },
   };
   const colors = palette[machine.status];
-  const Wrapper = onPress ? Pressable : View;
-
-  return (
-    <Wrapper
-      onPress={onPress}
-      style={[
-        styles.machineTile,
-        flexGrow && styles.machineTileGrow,
-        fill && styles.machineTileFill,
-        {
-          backgroundColor: colors.bg,
-          borderColor: colors.border,
-          borderWidth: colors.border ? 2 : 0,
-        },
-      ]}>
+  const showOutline = machine.status === 'in-use' && machine.mine;
+  const tileStyle = [
+    styles.machineTile,
+    flexGrow && styles.machineTileGrow,
+    fill && styles.machineTileFill,
+    machine.mine && styles.machineTileMine,
+    {
+      backgroundColor: colors.bg,
+      borderColor: showOutline ? theme.inUseBorder : undefined,
+      borderWidth: showOutline ? 2 : 0,
+    },
+  ];
+  const content = (
+    <>
+      {machine.mine && (
+        <ThemedText style={[styles.myBadge, { color: colors.text }]}>MY</ThemedText>
+      )}
       <ThemedText style={[styles.machineNumber, { color: colors.text }]}>{machine.id}</ThemedText>
       {machine.status === 'in-use' && (
         <ThemedText style={[styles.machineTime, { color: colors.text }]}>
           {machine.minutesLeft}m
         </ThemedText>
       )}
-    </Wrapper>
+    </>
   );
+
+  if (onPress || onLongPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        onLongPress={onLongPress}
+        delayLongPress={400}
+        style={tileStyle}>
+        {content}
+      </Pressable>
+    );
+  }
+
+  return <View style={tileStyle}>{content}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -311,6 +386,20 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  machineTileMine: {
+    paddingTop: 10,
+  },
+  myBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 3,
+    zIndex: 1,
+    fontSize: 8,
+    lineHeight: 10,
+    fontWeight: '700',
+    letterSpacing: 0.4,
   },
   machineTileGrow: {
     flex: 1,
