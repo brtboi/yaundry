@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useCallback, useRef, useState, useEffect } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PickupModal } from '@/components/pickup-modal';
@@ -15,7 +15,6 @@ import { useTheme } from '@/hooks/use-theme';
 // Module-scoped so the "you just opened the app" prompt only fires once per cold start,
 // not every time the Home tab remounts as you navigate around the app.
 let hasShownRatePromptThisSession = false;
-const WASHES_BETWEEN_REMINDERS = 3;
 
 type MachineStatus = 'available' | 'in-use' | 'broken' | 'pickup';
 
@@ -51,6 +50,10 @@ const myMachines = [
   { label: 'Dryer 1', minutesLeft: 8, percent: 0.2 },
 ];
 
+const WASHER_COLUMNS = 5;
+const DRYER_COLUMNS = 4;
+const MACHINE_GAP = Spacing.two;
+
 export default function HomeScreen() {
   const theme = useTheme();
   const [washers, setWashers] = useState(initialWashers);
@@ -66,33 +69,7 @@ export default function HomeScreen() {
     return () => clearTimeout(timer);
   }, []);
   const [reminder, setReminder] = useState<ReminderKind | null>(null);
-  const [completedWashes, setCompletedWashes] = useState(0);
   const lastReminderRef = useRef<ReminderKind | null>(null);
-
-  const showReminderIfDue = useCallback((nextCount: number) => {
-    if (nextCount % WASHES_BETWEEN_REMINDERS !== 0) return;
-    const kind: ReminderKind = lastReminderRef.current === 'lint' ? 'door' : 'lint';
-    lastReminderRef.current = kind;
-    setReminder(kind);
-  }, []);
-
-  const onMyWasherPress = useCallback(
-    (machine: Machine) => {
-      if (machine.status === 'in-use') {
-        setWashers((current) =>
-          current.map((item) =>
-            item.id === machine.id
-              ? { ...item, status: 'pickup' as const, minutesLeft: undefined }
-              : item
-          )
-        );
-      }
-      const nextCount = completedWashes + 1;
-      setCompletedWashes(nextCount);
-      showReminderIfDue(nextCount);
-    },
-    [completedWashes, showReminderIfDue]
-  );
 
   const showNextReminderForDemo = useCallback(() => {
     const kind: ReminderKind = lastReminderRef.current === 'lint' ? 'door' : 'lint';
@@ -113,6 +90,10 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
         <Pressable onPress={() => router.push('/booking')}>
           <ThemedView
             style={[styles.banner, { backgroundColor: theme.bannerGreen, borderColor: theme.cardBorder }]}>
@@ -168,46 +149,33 @@ export default function HomeScreen() {
             <ThemedText type="small" themeColor="textMuted" style={styles.sectionLabel}>
               WASHERS
             </ThemedText>
-            <View style={styles.washerRow}>
-              {washers.map((machine) => (
-                <MachineTile
-                  key={machine.id}
-                  machine={machine}
-                  flexGrow={machine.status !== 'in-use'}
-                  onPress={
-                    machine.mine && (machine.status === 'in-use' || machine.status === 'pickup')
-                      ? () => onMyWasherPress(machine)
-                      : machine.status === 'pickup'
-                        ? () => setPickup({ kind: 'Washer', id: machine.id })
-                        : undefined
-                  }
-                  onLongPress={machine.mine ? showNextReminderForDemo : undefined}
-                />
-              ))}
-            </View>
+            <MachineRow
+              machines={washers}
+              columns={WASHER_COLUMNS}
+              onPressMachine={(machine) =>
+                machine.status === 'pickup' && !machine.mine
+                  ? () => setPickup({ kind: 'Washer', id: machine.id })
+                  : undefined
+              }
+            />
           </View>
 
           <View style={styles.machineGroup}>
             <ThemedText type="small" themeColor="textMuted" style={styles.sectionLabel}>
               DRYERS
             </ThemedText>
-            <View style={styles.dryerGrid}>
-              {dryers.map((machine) => (
-                <View key={machine.id} style={styles.dryerCell}>
-                  <MachineTile
-                    machine={machine}
-                    fill
-                    onPress={
-                      machine.status === 'pickup' && !machine.mine
-                        ? () => setPickup({ kind: 'Dryer', id: machine.id })
-                        : undefined
-                    }
-                  />
-                </View>
-              ))}
-            </View>
+            <MachineRow
+              machines={dryers}
+              columns={DRYER_COLUMNS}
+              onPressMachine={(machine) =>
+                machine.status === 'pickup' && !machine.mine
+                  ? () => setPickup({ kind: 'Dryer', id: machine.id })
+                  : undefined
+              }
+            />
           </View>
         </ThemedView>
+        </ScrollView>
       </SafeAreaView>
 
       <PickupModal
@@ -238,16 +206,44 @@ function LegendItem({ color, label }: { color: string; label: string }) {
   );
 }
 
+function chunkMachines(machines: Machine[], size: number) {
+  const rows: Machine[][] = [];
+  for (let i = 0; i < machines.length; i += size) {
+    rows.push(machines.slice(i, i + size));
+  }
+  return rows;
+}
+
+function MachineRow({
+  machines,
+  columns,
+  onPressMachine,
+}: {
+  machines: Machine[];
+  columns: number;
+  onPressMachine: (machine: Machine) => (() => void) | undefined;
+}) {
+  return (
+    <View style={styles.machineRows}>
+      {chunkMachines(machines, columns).map((row) => (
+        <View key={row.map((machine) => machine.id).join('-')} style={styles.machineRow}>
+          {row.map((machine) => (
+            <View key={machine.id} style={styles.machineCell}>
+              <MachineTile machine={machine} onPress={onPressMachine(machine)} />
+            </View>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function MachineTile({
   machine,
-  flexGrow,
-  fill,
   onPress,
   onLongPress,
 }: {
   machine: Machine;
-  flexGrow?: boolean;
-  fill?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
 }) {
@@ -262,13 +258,10 @@ function MachineTile({
   const showOutline = machine.status === 'in-use' && machine.mine;
   const tileStyle = [
     styles.machineTile,
-    flexGrow && styles.machineTileGrow,
-    fill && styles.machineTileFill,
-    machine.mine && styles.machineTileMine,
     {
       backgroundColor: colors.bg,
-      borderColor: showOutline ? theme.inUseBorder : undefined,
-      borderWidth: showOutline ? 2 : 0,
+      borderColor: showOutline ? theme.inUseBorder : 'transparent',
+      borderWidth: 2,
     },
   ];
   const content = (
@@ -309,8 +302,14 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     maxWidth: MaxContentWidth,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: Spacing.three,
     paddingTop: WebTopTabBarInset,
+    paddingBottom: Spacing.five,
     gap: Spacing.three,
   },
   banner: {
@@ -387,28 +386,23 @@ const styles = StyleSheet.create({
   machineGroup: {
     gap: Spacing.two,
   },
-  washerRow: {
-    flexDirection: 'row',
+  machineRows: {
     gap: Spacing.two,
   },
-  dryerGrid: {
+  machineRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
+    gap: MACHINE_GAP,
   },
-  dryerCell: {
-    width: '22.5%',
+  machineCell: {
+    flex: 1,
+    aspectRatio: 1,
   },
   machineTile: {
-    width: 54,
-    height: 54,
+    flex: 1,
     borderRadius: Spacing.two,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-  },
-  machineTileMine: {
-    paddingTop: 10,
   },
   myBadge: {
     position: 'absolute',
@@ -419,14 +413,6 @@ const styles = StyleSheet.create({
     lineHeight: 10,
     fontWeight: '700',
     letterSpacing: 0.4,
-  },
-  machineTileGrow: {
-    flex: 1,
-    width: undefined,
-  },
-  machineTileFill: {
-    width: '100%',
-    aspectRatio: 1,
   },
   machineNumber: {
     fontSize: 16,
