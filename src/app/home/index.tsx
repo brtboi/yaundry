@@ -10,6 +10,8 @@ import { ReminderModal, type ReminderKind } from '@/components/reminder-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { rescoProfiles, useSelectedResco } from '@/hooks/use-selected-resco';
 import { useTheme } from '@/hooks/use-theme';
 
 // Module-scoped so the "you just opened the app" prompt only fires once per cold start,
@@ -56,6 +58,9 @@ const MACHINE_GAP = Spacing.two;
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const colorScheme = useColorScheme();
+  const selectedResco = rescoProfiles[useSelectedResco()];
+  const bannerColor = colorScheme === 'dark' ? selectedResco.bannerDark : selectedResco.bannerLight;
   const [washers, setWashers] = useState(initialWashers);
   const [dryers, setDryers] = useState(initialDryers);
   const [pickup, setPickup] = useState<{ kind: 'Washer' | 'Dryer'; id: number } | null>(null);
@@ -96,15 +101,11 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}>
         <Pressable onPress={() => router.push('/booking')}>
           <ThemedView
-            style={[styles.banner, { backgroundColor: theme.bannerGreen, borderColor: theme.cardBorder }]}>
+            style={[styles.banner, { backgroundColor: bannerColor, borderColor: theme.cardBorder }]}>
             <ThemedText type="subtitle" style={styles.bannerText}>
-              Jonathan Edwards
+              {selectedResco.name}
             </ThemedText>
-            <Image
-              source={require('@/assets/images/illustrations/je-shield.png')}
-              style={styles.shield}
-              contentFit="contain"
-            />
+            <Image source={selectedResco.shield} style={styles.shield} contentFit="contain" />
           </ThemedView>
         </Pressable>
 
