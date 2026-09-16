@@ -18,6 +18,7 @@ import {
   personOutlineSvg,
   personSvg,
   scheduleSvg,
+  ratingStarSvg,
   searchSvg,
   starSvg,
   techSupportOutlineSvg,
@@ -41,6 +42,7 @@ const icons = {
   search: searchSvg,
   edit: editSvg,
   star: starSvg,
+  'rating-star': ratingStarSvg,
   'map-pin': mapPinSvg,
   heart: heartOutlineSvg,
   'heart-filled': heartFilledSvg,
@@ -53,6 +55,7 @@ const icons = {
   | 'search'
   | 'edit'
   | 'star'
+  | 'rating-star'
   | 'map-pin'
   | 'heart'
   | 'heart-filled'
