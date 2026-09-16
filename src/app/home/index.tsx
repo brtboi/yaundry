@@ -4,6 +4,7 @@ import { useCallback, useRef, useState, useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Icon } from '@/components/icon';
 import { PickupModal } from '@/components/pickup-modal';
 import { RatePreviousUserModal } from '@/components/rate-previous-user-modal';
 import { RateReportModal, type RateReportTarget } from '@/components/rate-report-modal';
@@ -11,6 +12,7 @@ import { ReminderModal, type ReminderKind } from '@/components/reminder-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
+import { userStats } from '@/constants/user-stats';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { type MachineKind } from '@/hooks/use-machine-reviews';
 import { rescoProfiles, useSelectedResco } from '@/hooks/use-selected-resco';
@@ -120,6 +122,23 @@ export default function HomeScreen() {
             <Image source={selectedResco.shield} style={styles.shield} contentFit="contain" />
           </ThemedView>
         </Pressable>
+
+        {userStats.trend !== 'same' && (
+          <Pressable onPress={() => router.push('/home/profile')}>
+            <ThemedView
+              style={[styles.statsBanner, { borderColor: theme.cardBorder, backgroundColor: theme.card }]}>
+              <Icon
+                name={userStats.trend === 'up' ? 'arrow-upward' : 'arrow-downward'}
+                size={14}
+                color={userStats.trend === 'up' ? '#1E8E3E' : '#D93025'}
+              />
+              <ThemedText type="small" style={styles.statsBannerText}>
+                You've gained {userStats.weeklyPointsGained} points and moved {userStats.trend}{' '}
+                {userStats.trendDelta} place{userStats.trendDelta === 1 ? '' : 's'} this week
+              </ThemedText>
+            </ThemedView>
+          </Pressable>
+        )}
 
         <ThemedView style={[styles.card, { borderColor: theme.cardBorder, backgroundColor: theme.card }]}>
           <Pressable onPress={showNextReminderForDemo} accessibilityRole="button" accessibilityLabel="My machines">
@@ -414,6 +433,19 @@ const styles = StyleSheet.create({
   shield: {
     width: 56,
     height: 68,
+  },
+  statsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.three,
+  },
+  statsBannerText: {
+    flex: 1,
+    fontSize: 13,
   },
   card: {
     borderWidth: 1,

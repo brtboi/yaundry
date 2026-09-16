@@ -12,6 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { formatTime, TimePickerModal, type TimeValue } from '@/components/time-picker-modal';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
+import { pointsExplainer, userStats } from '@/constants/user-stats';
 import { type ColorSchemeOverride, useColorSchemeOverride } from '@/hooks/color-scheme-context';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -54,18 +55,6 @@ const pingDemo: PingReceivedData = {
   senderName: 'Blueberry',
   location: 'Jonathan Edwards, Washer 3',
 };
-
-// Mirrors the current user's standing on the Leaderboard tab.
-const userStats = {
-  points: 712,
-  rank: 4,
-  trend: 'up' as 'up' | 'down' | 'same',
-  trendDelta: 1,
-};
-
-const pointsExplainer =
-  'Earn points for on-time pickups, clean lint traps, quick pings, off-peak loads, lost & found ' +
-  'posts, ratings & referrals. Check the Leaderboard tab to see where you rank.';
 
 export default function ProfileScreen() {
   const theme = useTheme();
@@ -113,12 +102,10 @@ export default function ProfileScreen() {
             <View style={styles.avatarWrap}>
               <View style={[styles.avatar, { backgroundColor: theme.backgroundElement }]} />
               <View style={[styles.avatarEditBadge, { backgroundColor: theme.text }]}>
-                <ThemedText style={[styles.avatarEditIcon, { color: theme.background }]}>
-                  ✎
-                </ThemedText>
+                <Icon name="edit" size={13} color={theme.background} />
               </View>
             </View>
-            <ThemedText style={styles.name}>Daniel Jay Park</ThemedText>
+            <ThemedText style={styles.name}>Elihu Yale</ThemedText>
 
             <View style={styles.statsRow}>
               <ThemedText type="smallBold">{userStats.points} pts</ThemedText>
@@ -126,13 +113,18 @@ export default function ProfileScreen() {
               <View style={styles.rankGroup}>
                 <ThemedText type="smallBold">#{userStats.rank}</ThemedText>
                 {userStats.trend !== 'same' && (
-                  <ThemedText
-                    style={[
-                      styles.trendArrow,
-                      { color: userStats.trend === 'up' ? '#1E8E3E' : '#D93025' },
-                    ]}>
-                    {userStats.trend === 'up' ? '▲' : '▼'} {userStats.trendDelta}
-                  </ThemedText>
+                  <View style={styles.trendGroup}>
+                    <Icon
+                      name={userStats.trend === 'up' ? 'arrow-upward' : 'arrow-downward'}
+                      size={12}
+                      color={userStats.trend === 'up' ? '#1E8E3E' : '#D93025'}
+                    />
+                    <ThemedText
+                      type="smallBold"
+                      style={{ color: userStats.trend === 'up' ? '#1E8E3E' : '#D93025' }}>
+                      {userStats.trendDelta}
+                    </ThemedText>
+                  </View>
                 )}
               </View>
               <Pressable
@@ -470,9 +462,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  trendArrow: {
-    fontSize: 12,
-    fontWeight: '700',
+  trendGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 1,
   },
   infoBadge: {
     width: 18,
@@ -503,9 +496,6 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  avatarEditIcon: {
-    fontSize: 12,
   },
   name: {
     fontSize: 18,
