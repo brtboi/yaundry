@@ -55,6 +55,18 @@ const pingDemo: PingReceivedData = {
   location: 'Jonathan Edwards, Washer 3',
 };
 
+// Mirrors the current user's standing on the Leaderboard tab.
+const userStats = {
+  points: 712,
+  rank: 4,
+  trend: 'up' as 'up' | 'down' | 'same',
+  trendDelta: 1,
+};
+
+const pointsExplainer =
+  'Earn points for on-time pickups, clean lint traps, quick pings, off-peak loads, lost & found ' +
+  'posts, ratings & referrals. Check the Leaderboard tab to see where you rank.';
+
 export default function ProfileScreen() {
   const theme = useTheme();
   const [identity, setIdentity] = useState<'fruit' | 'real'>('fruit');
@@ -85,6 +97,10 @@ export default function ProfileScreen() {
     }
   }
 
+  function showPointsInfo() {
+    Alert.alert('How points work', pointsExplainer);
+  }
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -103,6 +119,34 @@ export default function ProfileScreen() {
               </View>
             </View>
             <ThemedText style={styles.name}>Daniel Jay Park</ThemedText>
+
+            <View style={styles.statsRow}>
+              <ThemedText type="smallBold">{userStats.points} pts</ThemedText>
+              <View style={[styles.statsDot, { backgroundColor: theme.textMuted }]} />
+              <View style={styles.rankGroup}>
+                <ThemedText type="smallBold">#{userStats.rank}</ThemedText>
+                {userStats.trend !== 'same' && (
+                  <ThemedText
+                    style={[
+                      styles.trendArrow,
+                      { color: userStats.trend === 'up' ? '#1E8E3E' : '#D93025' },
+                    ]}>
+                    {userStats.trend === 'up' ? '▲' : '▼'} {userStats.trendDelta}
+                  </ThemedText>
+                )}
+              </View>
+              <Pressable
+                onPress={showPointsInfo}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="How do points work?"
+                style={[styles.infoBadge, { backgroundColor: theme.backgroundSelected }]}>
+                <ThemedText type="smallBold" themeColor="textSecondary" style={styles.infoBadgeLabel}>
+                  ?
+                </ThemedText>
+              </Pressable>
+            </View>
+
             <ThemedText type="small" themeColor="textMuted">
               {fruit.emoji} {fruit.name}
             </ThemedText>
@@ -409,6 +453,37 @@ const styles = StyleSheet.create({
   avatarSection: {
     alignItems: 'center',
     gap: 4,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 2,
+  },
+  statsDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+  },
+  rankGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  trendArrow: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  infoBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoBadgeLabel: {
+    fontSize: 11,
+    lineHeight: 13,
   },
   avatarWrap: {
     width: 84,
