@@ -24,6 +24,7 @@ function RootLayoutNav() {
         <Stack.Screen name="index" />
         <Stack.Screen name="home" />
         <Stack.Screen name="booking" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="machine-reviews" />
       </Stack>
     </ThemeProvider>
   );

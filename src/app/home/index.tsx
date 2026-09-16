@@ -6,11 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PickupModal } from '@/components/pickup-modal';
 import { RatePreviousUserModal } from '@/components/rate-previous-user-modal';
+import { RateReportModal, type RateReportTarget } from '@/components/rate-report-modal';
 import { ReminderModal, type ReminderKind } from '@/components/reminder-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { type MachineKind } from '@/hooks/use-machine-reviews';
 import { rescoProfiles, useSelectedResco } from '@/hooks/use-selected-resco';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -63,7 +65,10 @@ export default function HomeScreen() {
   const bannerColor = colorScheme === 'dark' ? selectedResco.bannerDark : selectedResco.bannerLight;
   const [washers, setWashers] = useState(initialWashers);
   const [dryers, setDryers] = useState(initialDryers);
-  const [pickup, setPickup] = useState<{ kind: 'Washer' | 'Dryer'; id: number } | null>(null);
+  const [pickup, setPickup] = useState<{ kind: MachineKind; id: number } | null>(null);
+  const [rateTarget, setRateTarget] = useState<(RateReportTarget & { status: MachineStatus }) | null>(
+    null,
+  );
   const [showRatePrompt, setShowRatePrompt] = useState(false);
 
   useEffect(() => {
@@ -91,6 +96,13 @@ export default function HomeScreen() {
     if (pickup.kind === 'Washer') setWashers(update);
     else setDryers(update);
   }, [pickup]);
+
+  const openRateReport = useCallback((kind: MachineKind, machine: Machine) => {
+    setPickup(null);
+    setRateTarget({ kind, id: machine.id, status: machine.status });
+  }, []);
+
+  const closeRateReport = useCallback(() => setRateTarget(null), []);
 
   return (
     <ThemedView style={styles.container}>
@@ -153,6 +165,8 @@ export default function HomeScreen() {
             <MachineRow
               machines={washers}
               columns={WASHER_COLUMNS}
+              selectedId={rateTarget?.kind === 'Washer' ? rateTarget.id : null}
+              onLongPressMachine={(machine) => openRateReport('Washer', machine)}
               onPressMachine={(machine) =>
                 machine.status === 'pickup' && !machine.mine
                   ? () => setPickup({ kind: 'Washer', id: machine.id })
@@ -168,6 +182,8 @@ export default function HomeScreen() {
             <MachineRow
               machines={dryers}
               columns={DRYER_COLUMNS}
+              selectedId={rateTarget?.kind === 'Dryer' ? rateTarget.id : null}
+              onLongPressMachine={(machine) => openRateReport('Dryer', machine)}
               onPressMachine={(machine) =>
                 machine.status === 'pickup' && !machine.mine
                   ? () => setPickup({ kind: 'Dryer', id: machine.id })
@@ -192,6 +208,16 @@ export default function HomeScreen() {
         onClose={() => setShowRatePrompt(false)}
       />
       <ReminderModal kind={reminder} onClose={() => setReminder(null)} />
+      <RateReportModal
+        visible={rateTarget !== null}
+        machine={rateTarget}
+        backdropColor={
+          rateTarget ? colorWithAlpha(machinePalette(theme, rateTarget.status).text, 0.4) : undefined
+        }
+        onClose={closeRateReport}
+        onViewReviews={() => router.push('/machine-reviews')}
+        onReportOutOfOrder={() => router.push('/home/tech-support')}
+      />
     </ThemedView>
   );
 }
@@ -215,55 +241,110 @@ function chunkMachines(machines: Machine[], size: number) {
   return rows;
 }
 
-function MachineRow({
-  machines,
-  columns,
-  onPressMachine,
-}: {
-  machines: Machine[];
-  columns: number;
-  onPressMachine: (machine: Machine) => (() => void) | undefined;
-}) {
-  return (
-    <View style={styles.machineRows}>
-      {chunkMachines(machines, columns).map((row) => (
-        <View key={row.map((machine) => machine.id).join('-')} style={styles.machineRow}>
-          {row.map((machine) => (
-            <View key={machine.id} style={styles.machineCell}>
-              <MachineTile machine={machine} onPress={onPressMachine(machine)} />
-            </View>
-          ))}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function MachineTile({
-  machine,
-  onPress,
-  onLongPress,
-}: {
-  machine: Machine;
-  onPress?: () => void;
-  onLongPress?: () => void;
-}) {
-  const theme = useTheme();
+function machinePalette(theme: ReturnType<typeof useTheme>, status: MachineStatus) {
   const palette: Record<MachineStatus, { bg: string; text: string }> = {
     available: { bg: theme.available, text: theme.availableText },
     'in-use': { bg: theme.inUse, text: theme.inUseText },
     broken: { bg: theme.broken, text: theme.brokenText },
     pickup: { bg: theme.pickup, text: theme.pickupText },
   };
-  const colors = palette[machine.status];
+  return palette[status];
+}
+
+function colorWithAlpha(hex: string, alpha: number) {
+  const raw = hex.replace('#', '');
+  const normalized =
+    raw.length === 3
+      ? raw
+          .split('')
+          .map((char) => char + char)
+          .join('')
+      : raw;
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function MachineRow({
+  machines,
+  columns,
+  selectedId,
+  onLongPressMachine,
+  onPressMachine,
+}: {
+  machines: Machine[];
+  columns: number;
+  selectedId: number | null;
+  onLongPressMachine: (machine: Machine) => void;
+  onPressMachine: (machine: Machine) => (() => void) | undefined;
+}) {
+  return (
+    <View style={styles.machineRows}>
+      {chunkMachines(machines, columns).map((row) => (
+        <View key={row.map((machine) => machine.id).join('-')} style={styles.machineRow}>
+          {row.map((machine) => {
+            const selected = selectedId === machine.id;
+            return (
+              <View
+                key={machine.id}
+                style={[styles.machineCell, selected && styles.selectedCell]}>
+                {selected ? <SelectedMachineHalo status={machine.status} /> : null}
+                <MachineTile
+                  machine={machine}
+                  selected={selected}
+                  onPress={onPressMachine(machine)}
+                  onLongPress={() => onLongPressMachine(machine)}
+                />
+              </View>
+            );
+          })}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function SelectedMachineHalo({ status }: { status: MachineStatus }) {
+  const theme = useTheme();
+  const colors = machinePalette(theme, status);
+  return (
+    <View
+      pointerEvents="none"
+      style={[
+        styles.selectedHalo,
+        {
+          backgroundColor: colorWithAlpha(colors.bg, 0.95),
+          borderColor: colorWithAlpha(colors.text, 0.55),
+          boxShadow: `0 0 16px ${colorWithAlpha(colors.text, 0.55)}`,
+        },
+      ]}
+    />
+  );
+}
+
+function MachineTile({
+  machine,
+  selected,
+  onPress,
+  onLongPress,
+}: {
+  machine: Machine;
+  selected?: boolean;
+  onPress?: () => void;
+  onLongPress?: () => void;
+}) {
+  const theme = useTheme();
+  const colors = machinePalette(theme, machine.status);
   const showOutline = machine.status === 'in-use' && machine.mine;
   const tileStyle = [
     styles.machineTile,
     {
       backgroundColor: colors.bg,
-      borderColor: showOutline ? theme.inUseBorder : 'transparent',
-      borderWidth: 2,
+      borderColor: selected ? colors.text : showOutline ? theme.inUseBorder : 'transparent',
+      borderWidth: selected ? 2.5 : 2,
     },
+    selected && styles.selectedTile,
   ];
   const content = (
     <>
@@ -285,6 +366,9 @@ function MachineTile({
         onPress={onPress}
         onLongPress={onLongPress}
         delayLongPress={400}
+        accessibilityRole="button"
+        accessibilityLabel={`${machine.status === 'in-use' ? 'In use' : machine.status} ${machine.mine ? 'my ' : ''}machine ${machine.id}`}
+        accessibilityHint="Press and hold to rate or report this machine"
         style={tileStyle}>
         {content}
       </Pressable>
@@ -367,6 +451,7 @@ const styles = StyleSheet.create({
   },
   availabilityCard: {
     gap: Spacing.four,
+    overflow: 'visible',
   },
   legend: {
     flexDirection: 'row',
@@ -389,14 +474,30 @@ const styles = StyleSheet.create({
   },
   machineRows: {
     gap: Spacing.two,
+    overflow: 'visible',
   },
   machineRow: {
     flexDirection: 'row',
     gap: MACHINE_GAP,
+    overflow: 'visible',
   },
   machineCell: {
     flex: 1,
     aspectRatio: 1,
+  },
+  selectedCell: {
+    zIndex: 2,
+    overflow: 'visible',
+  },
+  selectedHalo: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    borderRadius: Spacing.two + 6,
+    borderWidth: 1,
+    transform: [{ scale: 1.2 }],
   },
   machineTile: {
     flex: 1,
@@ -404,6 +505,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  selectedTile: {
+    overflow: 'visible',
+    transform: [{ scale: 1.06 }],
   },
   myBadge: {
     position: 'absolute',
