@@ -116,7 +116,7 @@ export default function ProfileScreen() {
                   <View style={styles.trendGroup}>
                     <Icon
                       name={userStats.trend === 'up' ? 'arrow-upward' : 'arrow-downward'}
-                      size={12}
+                      size={17}
                       color={userStats.trend === 'up' ? '#1E8E3E' : '#D93025'}
                     />
                     <ThemedText

@@ -3,19 +3,34 @@ import { useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CreatePostModal, type NewPostData } from '@/components/create-post-modal';
+import { CreatePostModal, type NewPostData, type PostKind } from '@/components/create-post-modal';
+import { Dropdown } from '@/components/dropdown';
 import { Icon } from '@/components/icon';
+import { PostActionsSheet, type PostAction } from '@/components/post-actions-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { rescoOptions } from '@/constants/rescos';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 const preferredResco = 'Jonathan Edwards';
 
+const ALL_COLLEGES = 'All colleges';
+const rescoFilterOptions = [ALL_COLLEGES, ...rescoOptions];
+
+type KindFilter = 'all' | PostKind;
+
+const kindFilters: { id: KindFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'found', label: 'Found items' },
+  { id: 'message', label: 'Messages' },
+];
+
 type Post = {
   id: string;
+  kind: PostKind;
   name: string;
-  location: string;
+  resco: string;
   timeAgo: string;
   avatar: number;
   image?: number;
@@ -24,7 +39,6 @@ type Post = {
   isSensitive?: boolean;
   likes: number;
   liked: boolean;
-  claimable: boolean;
   claimed: boolean;
   commentCount?: number;
 };
@@ -32,8 +46,9 @@ type Post = {
 const initialPosts: Post[] = [
   {
     id: '1',
+    kind: 'found',
     name: 'Strawberry',
-    location: 'JE Laundry',
+    resco: 'Jonathan Edwards',
     timeAgo: '3 min ago',
     avatar: require('@/assets/images/illustrations/avatar-strawberry.png'),
     image: require('@/assets/images/illustrations/post-sock.png'),
@@ -41,33 +56,35 @@ const initialPosts: Post[] = [
     spotDescription: 'Under the sink',
     likes: 21,
     liked: false,
-    claimable: true,
     claimed: false,
   },
   {
     id: '2',
+    kind: 'message',
     name: 'Daniel',
-    location: 'Saybrook Laundry',
+    resco: 'Saybrook',
     timeAgo: '2 hrs ago',
     avatar: require('@/assets/images/illustrations/avatar-daniel.png'),
     description:
       "Hello! If anyone can keep an eye out for a pink fuzzy sock with strawberries on it, please do so :')",
     likes: 6,
     liked: false,
-    claimable: true,
     claimed: false,
+    commentCount: 2,
   },
   {
     id: '3',
+    kind: 'found',
     name: 'Oscar',
-    location: 'Benjamin Franklin Laundry',
+    resco: 'Benjamin Franklin',
     timeAgo: '1 day ago',
     avatar: require('@/assets/images/illustrations/avatar-oscar.png'),
     image: require('@/assets/images/illustrations/post-generic.png'),
-    description: 'Another post',
+    description: 'Left a pile of clothes on the folding table — grab them if they’re yours.',
+    spotDescription: 'Folding table by the door',
+    isSensitive: true,
     likes: 58,
     liked: false,
-    claimable: false,
     claimed: false,
     commentCount: 5,
   },
@@ -78,6 +95,19 @@ export default function LostAndFoundScreen() {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const [createVisible, setCreateVisible] = useState(false);
+  const [actionsPostId, setActionsPostId] = useState<string | null>(null);
+  const [rescoFilter, setRescoFilter] = useState<string>(ALL_COLLEGES);
+  const [kindFilter, setKindFilter] = useState<KindFilter>('all');
+  const [hideDelicates, setHideDelicates] = useState(false);
+
+  const visiblePosts = posts.filter((post) => {
+    if (rescoFilter !== ALL_COLLEGES && post.resco !== rescoFilter) return false;
+    if (kindFilter !== 'all' && post.kind !== kindFilter) return false;
+    if (hideDelicates && post.isSensitive) return false;
+    return true;
+  });
+
+  const actionsPost = posts.find((post) => post.id === actionsPostId) ?? null;
 
   function toggleLike(id: string) {
     setPosts((current) =>
@@ -104,21 +134,37 @@ export default function LostAndFoundScreen() {
     });
   }
 
+  function handlePostAction(action: PostAction) {
+    const id = actionsPostId;
+    if (!id) return;
+
+    if (action === 'flag-sensitive') {
+      setPosts((current) =>
+        current.map((post) => (post.id === id ? { ...post, isSensitive: !post.isSensitive } : post)),
+      );
+    } else if (action === 'hide') {
+      setPosts((current) => current.filter((post) => post.id !== id));
+    } else {
+      Alert.alert('Report sent', 'Thanks — a laundry manager will take a look at this post.');
+    }
+  }
+
   function handleCreatePost(data: NewPostData) {
     const newPost: Post = {
       id: `local-${Date.now()}`,
+      kind: data.kind,
       name: 'You',
-      location: `${data.resco} Laundry`,
+      resco: data.resco,
       timeAgo: 'Just now',
       avatar: require('@/assets/images/illustrations/avatar-blueberry.png'),
       image: data.hasPhoto ? require('@/assets/images/illustrations/post-generic.png') : undefined,
       description: data.description,
-      spotDescription: data.spotDescription,
+      spotDescription: data.spotDescription || undefined,
       isSensitive: data.isSensitive,
       likes: 0,
       liked: false,
-      claimable: true,
       claimed: false,
+      commentCount: data.kind === 'message' ? 0 : undefined,
     };
     setPosts((current) => [newPost, ...current]);
   }
@@ -141,10 +187,62 @@ export default function LostAndFoundScreen() {
           </Pressable>
         </View>
         <FlatList
-          data={posts}
+          data={visiblePosts}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View style={styles.filters}>
+              <Dropdown
+                value={rescoFilter}
+                options={rescoFilterOptions}
+                onChange={setRescoFilter}
+              />
+              <View style={styles.filterChipRow}>
+                {kindFilters.map((filter) => {
+                  const selected = filter.id === kindFilter;
+                  return (
+                    <Pressable
+                      key={filter.id}
+                      onPress={() => setKindFilter(filter.id)}
+                      style={[
+                        styles.filterChip,
+                        {
+                          borderColor: selected ? theme.text : theme.cardBorder,
+                          backgroundColor: selected ? theme.text : 'transparent',
+                        },
+                      ]}>
+                      <ThemedText
+                        type="small"
+                        style={{ color: selected ? theme.background : theme.text }}>
+                        {filter.label}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+                <Pressable
+                  onPress={() => setHideDelicates((value) => !value)}
+                  style={[
+                    styles.filterChip,
+                    {
+                      borderColor: hideDelicates ? theme.text : theme.cardBorder,
+                      backgroundColor: hideDelicates ? theme.text : 'transparent',
+                    },
+                  ]}>
+                  <ThemedText
+                    type="small"
+                    style={{ color: hideDelicates ? theme.background : theme.text }}>
+                    {hideDelicates ? '✓ ' : ''}Hide delicates
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </View>
+          }
+          ListEmptyComponent={
+            <ThemedText type="small" themeColor="textMuted" style={styles.emptyState}>
+              No posts match these filters yet.
+            </ThemedText>
+          }
           renderItem={({ item }) => {
             const isBlurred = !!item.isSensitive && !revealedIds.has(item.id);
             return (
@@ -154,15 +252,40 @@ export default function LostAndFoundScreen() {
                   <View style={styles.postHeader}>
                     <ThemedText style={styles.postMeta} numberOfLines={1}>
                       <ThemedText style={styles.postName}>{item.name} </ThemedText>
-                      in {item.location}
+                      in {item.resco} Laundry
                     </ThemedText>
-                    <Pressable hitSlop={8}>
+                    <Pressable
+                      hitSlop={8}
+                      onPress={() => setActionsPostId(item.id)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Post options">
                       <Icon name="more" size={26} color={theme.text} />
                     </Pressable>
                   </View>
-                  <ThemedText type="small" themeColor="textMuted">
-                    {item.timeAgo}
-                  </ThemedText>
+
+                  <View style={styles.metaRow}>
+                    <View
+                      style={[
+                        styles.kindBadge,
+                        {
+                          backgroundColor:
+                            item.kind === 'found' ? theme.available : theme.backgroundElement,
+                        },
+                      ]}>
+                      <ThemedText
+                        style={[
+                          styles.kindBadgeLabel,
+                          {
+                            color: item.kind === 'found' ? theme.availableText : theme.textSecondary,
+                          },
+                        ]}>
+                        {item.kind === 'found' ? 'Found item' : 'Message'}
+                      </ThemedText>
+                    </View>
+                    <ThemedText type="small" themeColor="textMuted">
+                      {item.timeAgo}
+                    </ThemedText>
+                  </View>
 
                   {item.image && (
                     <Pressable
@@ -211,7 +334,7 @@ export default function LostAndFoundScreen() {
                       </ThemedText>
                     </Pressable>
 
-                    {item.claimable ? (
+                    {item.kind === 'found' ? (
                       <Pressable
                         onPress={() => claimPost(item)}
                         disabled={item.claimed}
@@ -252,6 +375,13 @@ export default function LostAndFoundScreen() {
         defaultResco={preferredResco}
         onClose={() => setCreateVisible(false)}
         onSubmit={handleCreatePost}
+      />
+
+      <PostActionsSheet
+        visible={actionsPostId !== null}
+        isSensitive={!!actionsPost?.isSensitive}
+        onClose={() => setActionsPostId(null)}
+        onAction={handlePostAction}
       />
     </ThemedView>
   );
@@ -297,9 +427,28 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.three,
+    paddingTop: Spacing.two,
     paddingBottom: Spacing.five,
     gap: Spacing.five,
+  },
+  filters: {
+    gap: Spacing.two,
+    paddingBottom: Spacing.one,
+  },
+  filterChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  filterChip: {
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  emptyState: {
+    textAlign: 'center',
+    paddingVertical: Spacing.five,
   },
   post: {
     flexDirection: 'row',
@@ -325,6 +474,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   postName: {
+    fontWeight: '600',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  kindBadge: {
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  kindBadgeLabel: {
+    fontSize: 11,
     fontWeight: '600',
   },
   imageWrap: {

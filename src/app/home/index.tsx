@@ -124,20 +124,18 @@ export default function HomeScreen() {
         </Pressable>
 
         {userStats.trend !== 'same' && (
-          <Pressable onPress={() => router.push('/home/profile')}>
-            <ThemedView
-              style={[styles.statsBanner, { borderColor: theme.cardBorder, backgroundColor: theme.card }]}>
-              <Icon
-                name={userStats.trend === 'up' ? 'arrow-upward' : 'arrow-downward'}
-                size={14}
-                color={userStats.trend === 'up' ? '#1E8E3E' : '#D93025'}
-              />
-              <ThemedText type="small" style={styles.statsBannerText}>
-                You've gained {userStats.weeklyPointsGained} points and moved {userStats.trend}{' '}
-                {userStats.trendDelta} place{userStats.trendDelta === 1 ? '' : 's'} this week
-              </ThemedText>
-            </ThemedView>
-          </Pressable>
+          <ThemedView
+            style={[styles.statsBanner, { borderColor: theme.cardBorder, backgroundColor: theme.card }]}>
+            <Icon
+              name={userStats.trend === 'up' ? 'arrow-upward' : 'arrow-downward'}
+              size={20}
+              color={userStats.trend === 'up' ? '#1E8E3E' : '#D93025'}
+            />
+            <ThemedText type="small" style={styles.statsBannerText}>
+              You've gained {userStats.weeklyPointsGained} points and moved {userStats.trend}{' '}
+              {userStats.trendDelta} place{userStats.trendDelta === 1 ? '' : 's'} this week
+            </ThemedText>
+          </ThemedView>
         )}
 
         <ThemedView style={[styles.card, { borderColor: theme.cardBorder, backgroundColor: theme.card }]}>
