@@ -47,6 +47,8 @@ export const notificationsSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="
 
 export const scheduleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960"><path fill="currentColor" d="M513-492v-171q0-13-8.5-21.5T483-693q-13 0-21.5 8.5T453-663v183q0 6 2 11t6 10l144 149q9 10 22.5 9.5T650-310q9-9 9-22t-9-22L513-492ZM480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-82 31.5-155t86-127.5Q252-817 325-848.5T480-880q82 0 155 31.5t127.5 86Q817-708 848.5-635T880-480q0 82-31.5 155t-86 127.5Q708-143 635-111.5T480-80Z"/></svg>`;
 
+export const chevronDownSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960"><path fill="currentColor" d="M467.33-354.41q-5.96-2.48-11.44-7.96L258.13-560.13q-10.2-10.2-9.7-24.37.5-14.17 10.7-24.37 10.2-10.2 24.37-10.2 14.17 0 24.37 10.2L480-435.74l173.13-173.13q10.2-10.2 23.87-9.7 13.67.5 23.87 10.7 10.2 10.2 10.2 24.37 0 14.17-10.2 24.37L504.11-362.37q-5.48 5.48-11.44 7.96-5.95 2.48-12.67 2.48t-12.67-2.48Z"/></svg>`;
+
 // Heavier weight (700) than the rest so the small rank-trend arrows still read clearly.
 export const arrowUpwardSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960"><path fill="currentColor" d="M433-645 235-447q-14 14-33.5 14.5T168-446q-15-14-14.5-34t14.5-34l278-278q7-7 16-11t18-4q9 0 18 4t16 11l279 279q14 15 14 34t-14 33q-15 14-34 14t-33-14L527-645v463q0 20-13.5 33.5T480-135q-20 0-33.5-13.5T433-182v-463Z"/></svg>`;
 

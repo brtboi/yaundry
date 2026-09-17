@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { Icon } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -20,6 +21,21 @@ export function Dropdown({ value, options, onChange }: DropdownProps) {
   const triggerRef = useRef<View>(null);
   const [open, setOpen] = useState(false);
   const [layout, setLayout] = useState<Layout | null>(null);
+  const openProgress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(openProgress, {
+      toValue: open ? 1 : 0,
+      duration: 200,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [open, openProgress]);
+
+  const chevronRotation = openProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
 
   function handleOpen() {
     triggerRef.current?.measureInWindow((x, y, width, height) => {
@@ -33,11 +49,28 @@ export function Dropdown({ value, options, onChange }: DropdownProps) {
       <Pressable
         ref={triggerRef}
         onPress={handleOpen}
-        style={[styles.trigger, { borderColor: theme.cardBorder }]}>
+        style={({ pressed }) => [
+          styles.trigger,
+          {
+            borderColor: open ? theme.text : theme.cardBorder,
+            backgroundColor: pressed ? theme.backgroundElement : 'transparent',
+          },
+        ]}>
         <ThemedText style={styles.triggerValue}>{value}</ThemedText>
-        <ThemedText themeColor="textMuted" style={styles.chevron}>
-          ▾
-        </ThemedText>
+        <Animated.View
+          style={[
+            styles.chevronBadge,
+            {
+              backgroundColor: open ? theme.text : theme.backgroundElement,
+              transform: [{ rotate: chevronRotation }],
+            },
+          ]}>
+          <Icon
+            name="chevron-down"
+            size={18}
+            color={open ? theme.background : theme.textSecondary}
+          />
+        </Animated.View>
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
@@ -88,14 +121,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderWidth: 1,
     borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
+    paddingLeft: 14,
+    paddingRight: 10,
+    paddingVertical: 10,
   },
   triggerValue: {
     fontSize: 15,
   },
-  chevron: {
-    fontSize: 14,
+  chevronBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   menu: {
     position: 'absolute',
