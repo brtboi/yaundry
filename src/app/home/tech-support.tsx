@@ -34,7 +34,7 @@ const destinationCopy: Record<IssueDestination, { label: string; notified: strin
     notified: 'Facilities has been notified. Thanks for the heads up!',
   },
   resco: {
-    label: "Your ResCo's Student Laundry Manager",
+    label: "ResCo Laundry Manager",
     notified: 'Your laundry manager has been notified. Thanks for flagging this!',
   },
 };
@@ -61,7 +61,7 @@ export default function TechSupportScreen() {
 
   function handleSubmit() {
     if (!selectedIssue) {
-      Alert.alert('Pick an issue', 'Select what kind of issue you’re reporting first.');
+      Alert.alert('Pick an issue', 'Select what kind of issue you\'re reporting first.');
       return;
     }
 
@@ -83,7 +83,7 @@ export default function TechSupportScreen() {
             <Dropdown value={resco} options={rescoOptions} onChange={setResco} />
           </Field>
 
-          <Field label="WHICH MACHINE? (IF APPLICABLE)">
+          <Field label="WHICH MACHINE?">
             <TextInput
               value={machine}
               onChangeText={setMachine}
