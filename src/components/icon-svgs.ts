@@ -47,6 +47,8 @@ export const notificationsSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="
 
 export const scheduleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960"><path fill="currentColor" d="M513-492v-171q0-13-8.5-21.5T483-693q-13 0-21.5 8.5T453-663v183q0 6 2 11t6 10l144 149q9 10 22.5 9.5T650-310q9-9 9-22t-9-22L513-492ZM480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-82 31.5-155t86-127.5Q252-817 325-848.5T480-880q82 0 155 31.5t127.5 86Q817-708 848.5-635T880-480q0 82-31.5 155t-86 127.5Q708-143 635-111.5T480-80Z"/></svg>`;
 
+export const warningSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 2.4 22.7 21.3c.28.48.05 1.1-.5 1.1H1.8c-.55 0-.78-.62-.5-1.1L12 2.4Zm0 3.3L3.55 20.4h16.9L12 5.7ZM12.95 9.6h-1.9v5.7h1.9V9.6Zm0 7.05h-1.9V18h1.9v-1.35Z"/></svg>`;
+
 // Brand logo, not a Material Symbol — keep as exported from Figma.
 export const googleLogoSvg = `<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="Logo" clip-path="url(#clip0_0_20)">

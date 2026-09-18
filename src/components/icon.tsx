@@ -23,6 +23,7 @@ import {
   starSvg,
   techSupportOutlineSvg,
   techSupportSvg,
+  warningSvg,
 } from '@/components/icon-svgs';
 
 // Icons with a distinct outline (inactive) and filled (active) Material Symbol variant.
@@ -50,6 +51,7 @@ const icons = {
   more: moreSvg,
   notifications: notificationsSvg,
   schedule: scheduleSvg,
+  warning: warningSvg,
 } as { [K in FillableIconName]: string } & Record<
   | 'google'
   | 'search'
@@ -62,7 +64,8 @@ const icons = {
   | 'comments'
   | 'more'
   | 'notifications'
-  | 'schedule',
+  | 'schedule'
+  | 'warning',
   string
 >;
 

@@ -14,15 +14,19 @@ type PickupModalProps = {
   visible: boolean;
   machineLabel: string;
   ownerName?: string;
+  ownerAvatar?: number;
   finishedAgo?: string;
   onClose: () => void;
   onPickedUp?: () => void;
 };
 
+const blueberryAvatar = require('@/assets/images/illustrations/avatar-blueberry.png');
+
 export function PickupModal({
   visible,
   machineLabel,
   ownerName = 'Blueberry',
+  ownerAvatar = blueberryAvatar,
   finishedAgo = 'Finished 12 min ago',
   onClose,
   onPickedUp,
@@ -102,7 +106,7 @@ export function PickupModal({
 
             <View style={styles.ownerRow}>
               <Image
-                source={require('@/assets/images/illustrations/avatar-blueberry.png')}
+                source={ownerAvatar}
                 style={[styles.avatar, { backgroundColor: theme.backgroundElement }]}
                 contentFit="cover"
               />
