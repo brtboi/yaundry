@@ -1,6 +1,13 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useCallback, useRef, useState, useEffect } from 'react';
+import {
+  MdArrowDownward,
+  MdArrowUpward,
+  MdNotificationsActive,
+  MdNotificationsNone,
+  MdWarningAmber,
+} from 'react-icons/md';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -49,6 +56,8 @@ type Machine = {
   percent?: number;
   occupant?: Occupant;
   finishedAgo?: string;
+  /** Whether you've already pinged the owner to pick up their laundry. */
+  pinged?: boolean;
 };
 
 const jonathanEdwardsMachines = {
@@ -221,7 +230,13 @@ const DRYER_COLUMNS = 4;
 const MACHINE_GAP = Spacing.two;
 
 type StatusTarget = { kind: MachineKind; machine: Machine };
-type PickupTarget = { kind: MachineKind; id: number; occupant?: Occupant; finishedAgo?: string };
+type PickupTarget = {
+  kind: MachineKind;
+  id: number;
+  occupant?: Occupant;
+  finishedAgo?: string;
+  pinged?: boolean;
+};
 type RateTarget = RateReportTarget & { status: MachineStatus; mine?: boolean };
 
 export default function HomeScreen() {
@@ -284,17 +299,27 @@ export default function HomeScreen() {
     setReminder(kind);
   }, []);
 
-  const markPickupAvailable = useCallback(() => {
-    if (!pickup) return;
-    const update = (machines: Machine[]) =>
-      machines.map((machine) =>
-        machine.id === pickup.id
-          ? { ...machine, status: 'available' as const, finishedAgo: 'Picked up just now' }
-          : machine
-      );
-    if (pickup.kind === 'Washer') setWashers(update);
-    else setDryers(update);
-  }, [pickup]);
+  const updatePickupMachine = useCallback(
+    (changes: Partial<Machine>) => {
+      if (!pickup) return;
+      const update = (machines: Machine[]) =>
+        machines.map((machine) => (machine.id === pickup.id ? { ...machine, ...changes } : machine));
+      if (pickup.kind === 'Washer') setWashers(update);
+      else setDryers(update);
+    },
+    [pickup],
+  );
+
+  const markPickupPinged = useCallback(
+    () => updatePickupMachine({ pinged: true }),
+    [updatePickupMachine],
+  );
+
+  const markPickupAvailable = useCallback(
+    () =>
+      updatePickupMachine({ status: 'available', finishedAgo: 'Picked up just now', pinged: false }),
+    [updatePickupMachine],
+  );
 
   const openRateReport = useCallback((kind: MachineKind, machine: Machine) => {
     setPickup(null);
@@ -312,6 +337,7 @@ export default function HomeScreen() {
         id: machine.id,
         occupant: machine.occupant,
         finishedAgo: machine.finishedAgo,
+        pinged: machine.pinged,
       });
       return;
     }
@@ -351,7 +377,7 @@ export default function HomeScreen() {
           <ThemedView
             style={[styles.statsBanner, { borderColor: theme.cardBorder, backgroundColor: theme.card }]}>
             <Icon
-              name={userStats.trend === 'up' ? 'arrow-upward' : 'arrow-downward'}
+              icon={userStats.trend === 'up' ? MdArrowUpward : MdArrowDownward}
               size={20}
               color={userStats.trend === 'up' ? '#1E8E3E' : '#D93025'}
             />
@@ -433,7 +459,9 @@ export default function HomeScreen() {
         ownerName={pickup?.occupant?.name}
         ownerAvatar={pickup?.occupant?.avatar}
         finishedAgo={pickup?.finishedAgo}
+        pinged={pickup?.pinged}
         onClose={() => setPickup(null)}
+        onPinged={markPickupPinged}
         onPickedUp={markPickupAvailable}
       />
 
@@ -632,7 +660,7 @@ function MachineTile({
   const caption = machineCaption(machine);
   const showBell = machine.status === 'pickup' && !machine.mine;
   const showWarning = machine.status === 'broken';
-  const warningSize = compact ? 12 : 18;
+  const cornerIconSize = compact ? 14 : 18;
   const tileStyle = [
     styles.machineTile,
     {
@@ -651,23 +679,34 @@ function MachineTile({
       accessibilityRole="button"
       accessibilityLabel={`${machine.status === 'in-use' ? 'In use' : machine.status} ${machine.mine ? 'my ' : ''}machine ${machine.id}`}
       accessibilityHint={
-        showBell ? 'Opens ping popup' : 'Shows machine status. Press and hold to rate or report this machine'
+        showBell ? (machine.pinged ? 'Owner already pinged. Opens ping popup' : 'Opens ping popup') : 'Shows machine status. Press and hold to rate or report this machine'
       }
       style={tileStyle}>
       {showBell ? (
-        <View pointerEvents="none" style={styles.cornerIcon}>
-          <Icon name="notifications" size={13} color={colors.text} />
+        <View
+          pointerEvents="none"
+          style={[
+            styles.cornerIcon,
+            compact && styles.cornerIconCompact,
+            { width: cornerIconSize, height: cornerIconSize },
+          ]}>
+          {/* Outline bell until you've pinged the owner, then a filled, ringing bell. */}
+          <Icon
+            icon={machine.pinged ? MdNotificationsActive : MdNotificationsNone}
+            size={cornerIconSize}
+            color={colors.text}
+          />
         </View>
       ) : null}
       {showWarning ? (
         <View
           pointerEvents="none"
           style={[
-            styles.warningIcon,
-            compact && styles.warningIconCompact,
-            { width: warningSize, height: warningSize },
+            styles.cornerIcon,
+            compact && styles.cornerIconCompact,
+            { width: cornerIconSize, height: cornerIconSize },
           ]}>
-          <Icon name="warning" size={warningSize} color={theme.text} />
+          <Icon icon={MdWarningAmber} size={cornerIconSize} color={colors.text} />
         </View>
       ) : null}
       <ThemedText style={[styles.machineNumber, { color: colors.text }]}>{machine.id}</ThemedText>
@@ -828,23 +867,13 @@ const styles = StyleSheet.create({
   },
   cornerIcon: {
     position: 'absolute',
-    top: 3,
-    left: 3,
-    zIndex: 1,
-    width: 13,
-    height: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  warningIcon: {
-    position: 'absolute',
     top: 4,
     left: 4,
     zIndex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  warningIconCompact: {
+  cornerIconCompact: {
     top: 3,
     left: 3,
   },

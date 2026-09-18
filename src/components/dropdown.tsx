@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { MdKeyboardArrowDown } from 'react-icons/md';
 import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Icon } from '@/components/icon';
@@ -66,7 +67,7 @@ export function Dropdown({ value, options, onChange }: DropdownProps) {
             },
           ]}>
           <Icon
-            name="chevron-down"
+            icon={MdKeyboardArrowDown}
             size={18}
             color={open ? theme.background : theme.textSecondary}
           />

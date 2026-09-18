@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { MdStar } from 'react-icons/md';
 import { PanResponder, StyleSheet, View } from 'react-native';
 
 import { Icon } from '@/components/icon';
@@ -86,14 +87,14 @@ function RatingStar({ fill, size }: { fill: 0 | 0.5 | 1; size: number }) {
   const theme = useTheme();
   return (
     <View pointerEvents="none" style={{ width: size, height: size }}>
-      <Icon name="rating-star" size={size} color={theme.backgroundSelected} />
+      <Icon icon={MdStar} size={size} color={theme.backgroundSelected} />
       {fill > 0 && (
         <View
           style={[
             styles.fillClip,
             { width: fill === 0.5 ? size / 2 : size, height: size },
           ]}>
-          <Icon name="rating-star" size={size} color={RATING_STAR_FILL} />
+          <Icon icon={MdStar} size={size} color={RATING_STAR_FILL} />
         </View>
       )}
     </View>

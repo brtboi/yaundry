@@ -1,11 +1,20 @@
 import { router } from 'expo-router';
 import { type ReactNode, useState } from 'react';
+import { FcGoogle } from 'react-icons/fc';
+import {
+  MdArrowDownward,
+  MdArrowUpward,
+  MdChatBubbleOutline,
+  MdNotificationsNone,
+  MdOutlineEdit,
+  MdSchedule,
+} from 'react-icons/md';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedSwitch } from '@/components/animated-switch';
 import { FruitPickerModal, fruitOptions, type FruitOption } from '@/components/fruit-picker-modal';
-import { Icon, type IconName } from '@/components/icon';
+import { Icon, type IconType } from '@/components/icon';
 import { NotificationToast, type NotificationPreview } from '@/components/notification-toast';
 import { PingReceivedNotification, type PingReceivedData } from '@/components/ping-received-notification';
 import { ThemedText } from '@/components/themed-text';
@@ -37,14 +46,14 @@ type NotificationDemo = NotificationPreview & { id: string; blurb: string };
 const notificationDemos: NotificationDemo[] = [
   {
     id: 'free-machine',
-    icon: 'schedule',
+    icon: MdSchedule,
     title: 'A dryer just opened up',
     message: 'JE Laundry has a free dryer during your 6:00 PM preferred time.',
     blurb: 'Free machine at preferred time',
   },
   {
     id: 'pickup',
-    icon: 'notifications',
+    icon: MdNotificationsNone,
     title: 'Your laundry is done',
     message: "Washer 3 finished 2 min ago — swing by before someone else needs it.",
     blurb: 'Pickup reminders',
@@ -102,7 +111,7 @@ export default function ProfileScreen() {
             <View style={styles.avatarWrap}>
               <View style={[styles.avatar, { backgroundColor: theme.backgroundElement }]} />
               <View style={[styles.avatarEditBadge, { backgroundColor: theme.text }]}>
-                <Icon name="edit" size={13} color={theme.background} />
+                <Icon icon={MdOutlineEdit} size={13} color={theme.background} />
               </View>
             </View>
             <ThemedText style={styles.name}>Elihu Yale</ThemedText>
@@ -115,7 +124,7 @@ export default function ProfileScreen() {
                 {userStats.trend !== 'same' && (
                   <View style={styles.trendGroup}>
                     <Icon
-                      name={userStats.trend === 'up' ? 'arrow-upward' : 'arrow-downward'}
+                      icon={userStats.trend === 'up' ? MdArrowUpward : MdArrowDownward}
                       size={17}
                       color={userStats.trend === 'up' ? '#1E8E3E' : '#D93025'}
                     />
@@ -217,7 +226,7 @@ export default function ProfileScreen() {
                 styles.gcalButton,
                 { borderColor: theme.cardBorder, opacity: pressed ? 0.8 : 1 },
               ]}>
-              <Icon name="google" size={18} />
+              <Icon icon={FcGoogle} size={18} />
               <ThemedText style={styles.gcalLabel}>Connect Google Calendar</ThemedText>
               <ThemedText themeColor="textMuted">{'›'}</ThemedText>
             </Pressable>
@@ -229,7 +238,7 @@ export default function ProfileScreen() {
             </ThemedText>
             <View style={styles.demoList}>
               <DemoButton
-                icon="comments"
+                icon={MdChatBubbleOutline}
                 label="Ping notifications"
                 onPress={() => setPingPreviewVisible(true)}
               />
@@ -308,7 +317,7 @@ function DemoButton({
   label,
   onPress,
 }: {
-  icon: IconName;
+  icon: IconType;
   label: string;
   onPress: () => void;
 }) {
@@ -321,7 +330,7 @@ function DemoButton({
         { borderColor: theme.cardBorder, opacity: pressed ? 0.7 : 1 },
       ]}>
       <View style={[styles.demoIconBadge, { backgroundColor: theme.backgroundElement }]}>
-        <Icon name={icon} size={18} color={theme.text} />
+        <Icon icon={icon} size={18} color={theme.text} />
       </View>
       <ThemedText style={styles.demoLabel}>{label}</ThemedText>
       <ThemedText type="small" themeColor="textMuted">

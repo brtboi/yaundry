@@ -16,7 +16,10 @@ type PickupModalProps = {
   ownerName?: string;
   ownerAvatar?: number;
   finishedAgo?: string;
+  /** The owner was already pinged earlier, so reopen straight into the "Ping Sent!" state. */
+  pinged?: boolean;
   onClose: () => void;
+  onPinged?: () => void;
   onPickedUp?: () => void;
 };
 
@@ -28,7 +31,9 @@ export function PickupModal({
   ownerName = 'Blueberry',
   ownerAvatar = blueberryAvatar,
   finishedAgo = 'Finished 12 min ago',
+  pinged = false,
   onClose,
+  onPinged,
   onPickedUp,
 }: PickupModalProps) {
   const theme = useTheme();
@@ -43,10 +48,14 @@ export function PickupModal({
   );
 
   useEffect(() => {
-    if (!visible) {
+    if (visible) {
+      setPingState(pinged ? 'sent' : 'idle');
+    } else {
       setPingState('idle');
       setPointsAwarded(false);
     }
+    // Only sync from `pinged` when the sheet opens; afterwards the sheet owns its ping state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   useEffect(() => {
@@ -120,7 +129,10 @@ export function PickupModal({
 
             {pingState === 'idle' && (
               <Pressable
-                onPress={() => setPingState('sent')}
+                onPress={() => {
+                  setPingState('sent');
+                  onPinged?.();
+                }}
                 style={({ pressed }) => [
                   styles.pingButton,
                   { backgroundColor: theme.text, opacity: pressed ? 0.85 : 1 },

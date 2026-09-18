@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { MdStar } from 'react-icons/md';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -80,7 +81,7 @@ function ReviewCard({ item }: { item: MachineReviewSummary }) {
         <ThemedText type="small" themeColor="textMuted" style={styles.ratingValue}>
           {formatRating(item.rating)}
         </ThemedText>
-        <Icon name="rating-star" size={15} color={RATING_STAR_FILL} />
+        <Icon icon={MdStar} size={15} color={RATING_STAR_FILL} />
       </View>
       {item.comment ? (
         <ThemedText themeColor="textSecondary" style={styles.cardBody}>

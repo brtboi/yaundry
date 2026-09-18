@@ -1,5 +1,12 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
+import {
+  MdChatBubbleOutline,
+  MdFavorite,
+  MdFavoriteBorder,
+  MdMoreHoriz,
+  MdOutlineLocationOn,
+} from 'react-icons/md';
 import { Alert, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -259,7 +266,7 @@ export default function LostAndFoundScreen() {
                       onPress={() => setActionsPostId(item.id)}
                       accessibilityRole="button"
                       accessibilityLabel="Post options">
-                      <Icon name="more" size={26} color={theme.text} />
+                      <Icon icon={MdMoreHoriz} size={26} color={theme.text} />
                     </Pressable>
                   </View>
 
@@ -311,7 +318,7 @@ export default function LostAndFoundScreen() {
                   <ThemedText style={styles.description}>{item.description}</ThemedText>
                   {item.spotDescription && (
                     <View style={styles.spotRow}>
-                      <Icon name="map-pin" size={16} color={theme.textMuted} />
+                      <Icon icon={MdOutlineLocationOn} size={16} color={theme.textMuted} />
                       <ThemedText type="small" themeColor="textMuted">
                         {item.spotDescription}
                       </ThemedText>
@@ -324,7 +331,7 @@ export default function LostAndFoundScreen() {
                       hitSlop={8}
                       style={styles.actionItem}>
                       <Icon
-                        name={item.liked ? 'heart-filled' : 'heart'}
+                        icon={item.liked ? MdFavorite : MdFavoriteBorder}
                         size={22}
                         color={item.liked ? '#E0245E' : theme.text}
                       />
@@ -356,7 +363,7 @@ export default function LostAndFoundScreen() {
                       </Pressable>
                     ) : (
                       <View style={styles.actionItem}>
-                        <Icon name="comments" size={22} color={theme.text} />
+                        <Icon icon={MdChatBubbleOutline} size={22} color={theme.text} />
                         <ThemedText style={styles.actionLabel}>
                           {item.commentCount ?? 0} comments
                         </ThemedText>

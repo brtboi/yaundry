@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { FcGoogle } from 'react-icons/fc';
 import { Platform, Pressable, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -71,7 +72,7 @@ export default function SignInScreen() {
               styles.googleButton,
               { backgroundColor: theme.backgroundElement, opacity: pressed ? 0.8 : 1 },
             ]}>
-            <Icon name="google" size={20} />
+            <Icon icon={FcGoogle} size={20} />
             <ThemedText style={styles.buttonLabel}>Continue with Google</ThemedText>
           </Pressable>
 

@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { MdOutlineThumbDown, MdOutlineThumbUp, MdThumbDown, MdThumbUp } from 'react-icons/md';
 import { Alert, Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
 
+import { Icon, type IconType } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -77,13 +79,15 @@ export function RatePreviousUserModal({
 
           <View style={styles.thumbsRow}>
             <ThumbButton
-              emoji="👍"
+              icon={MdOutlineThumbUp}
+              selectedIcon={MdThumbUp}
               label="Good"
               selected={rating === 'up'}
               onPress={() => setRating('up')}
             />
             <ThumbButton
-              emoji="👎"
+              icon={MdOutlineThumbDown}
+              selectedIcon={MdThumbDown}
               label="Not great"
               selected={rating === 'down'}
               onPress={() => setRating('down')}
@@ -141,12 +145,14 @@ export function RatePreviousUserModal({
 }
 
 function ThumbButton({
-  emoji,
+  icon,
+  selectedIcon,
   label,
   selected,
   onPress,
 }: {
-  emoji: string;
+  icon: IconType;
+  selectedIcon: IconType;
   label: string;
   selected: boolean;
   onPress: () => void;
@@ -162,7 +168,11 @@ function ThumbButton({
           backgroundColor: selected ? theme.backgroundSelected : 'transparent',
         },
       ]}>
-      <ThemedText style={styles.thumbEmoji}>{emoji}</ThemedText>
+      <Icon
+        icon={selected ? selectedIcon : icon}
+        size={28}
+        color={selected ? theme.text : theme.textMuted}
+      />
       <ThemedText type="small" themeColor={selected ? 'text' : 'textMuted'}>
         {label}
       </ThemedText>
@@ -216,9 +226,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     alignItems: 'center',
     gap: 4,
-  },
-  thumbEmoji: {
-    fontSize: 28,
   },
   tagList: {
     flexDirection: 'row',

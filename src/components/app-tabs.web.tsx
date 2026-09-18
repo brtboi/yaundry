@@ -7,8 +7,20 @@ import {
   TabTriggerSlotProps,
   TabListProps,
 } from 'expo-router/ui';
-import { SymbolView } from 'expo-symbols';
 import { useRef } from 'react';
+import {
+  MdForum,
+  MdHelp,
+  MdHelpOutline,
+  MdHome,
+  MdLeaderboard,
+  MdOpenInNew,
+  MdOutlineForum,
+  MdOutlineHome,
+  MdOutlineLeaderboard,
+  MdOutlinePerson,
+  MdPerson,
+} from 'react-icons/md';
 import {
   Pressable,
   useColorScheme,
@@ -19,7 +31,7 @@ import {
 } from 'react-native';
 
 import { ExternalLink } from './external-link';
-import { Icon } from './icon';
+import { Icon, type IconType } from './icon';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
@@ -36,6 +48,15 @@ const tabRoutes = [
 ] as const;
 
 const SWIPE_DISTANCE_THRESHOLD = 60;
+
+// Outline icon while inactive, filled once the tab is focused.
+const tabIcons = {
+  home: { outline: MdOutlineHome, filled: MdHome },
+  'lost-found': { outline: MdOutlineForum, filled: MdForum },
+  leaderboard: { outline: MdOutlineLeaderboard, filled: MdLeaderboard },
+  'tech-support': { outline: MdHelpOutline, filled: MdHelp },
+  person: { outline: MdOutlinePerson, filled: MdPerson },
+} satisfies Record<string, { outline: IconType; filled: IconType }>;
 
 export default function AppTabs() {
   return (
@@ -91,7 +112,7 @@ function SwipeableTabSlot() {
   return <TabSlot style={{ height: '100%' }} {...panResponder.panHandlers} />;
 }
 
-type TabButtonProps = TabTriggerSlotProps & { icon: import('./icon').IconName };
+type TabButtonProps = TabTriggerSlotProps & { icon: keyof typeof tabIcons };
 
 export function TabButton({ children, isFocused, icon, ...props }: TabButtonProps) {
   const theme = useTheme();
@@ -106,8 +127,7 @@ export function TabButton({ children, isFocused, icon, ...props }: TabButtonProp
           { backgroundColor: isFocused ? theme.accentTrack : 'transparent' },
         ]}>
         <Icon
-          name={icon}
-          filled={isFocused}
+          icon={isFocused ? tabIcons[icon].filled : tabIcons[icon].outline}
           size={20}
           color={isFocused ? theme.accent : theme.textSecondary}
         />
@@ -148,11 +168,7 @@ export function CustomTabList(props: TabListProps) {
           <ExternalLink href="https://docs.expo.dev" asChild>
             <Pressable style={styles.externalPressable}>
               <ThemedText type="link">Docs</ThemedText>
-              <SymbolView
-                tintColor={colors.text}
-                name={{ ios: 'arrow.up.right.square', web: 'link' }}
-                size={12}
-              />
+              <Icon icon={MdOpenInNew} size={12} color={colors.text} />
             </Pressable>
           </ExternalLink>
         )}

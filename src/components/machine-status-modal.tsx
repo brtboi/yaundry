@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { useRef } from 'react';
+import { MdStarOutline } from 'react-icons/md';
 import { Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon } from '@/components/icon';
@@ -102,7 +103,7 @@ export function MachineStatusModal({
                   {subtitle}
                 </ThemedText>
               </View>
-              <Icon name="star" size={15} color={theme.textMuted} />
+              <Icon icon={MdStarOutline} size={15} color={theme.textMuted} />
               <ThemedText type="small" themeColor="textMuted" style={styles.rating}>
                 {formatMachineRating(rating)}
               </ThemedText>

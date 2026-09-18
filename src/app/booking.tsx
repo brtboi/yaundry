@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
+import { MdOutlineEdit, MdOutlineLocationOn, MdSearch, MdStarOutline } from 'react-icons/md';
 import { DimensionValue, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -191,7 +192,7 @@ export default function BookingScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={[styles.searchBar, { backgroundColor: theme.backgroundElement }]}>
-          <Icon name="search" size={26} color={theme.textMuted} />
+          <Icon icon={MdSearch} size={26} color={theme.textMuted} />
           <View style={styles.searchText}>
             <ThemedText style={styles.searchTitle}>{selectedRoom.name}</ThemedText>
             <ThemedText type="small" themeColor="textMuted">
@@ -208,7 +209,7 @@ export default function BookingScreen() {
             </View>
           </View>
           <Pressable onPress={() => router.back()} hitSlop={8}>
-            <Icon name="edit" size={24} color={theme.text} />
+            <Icon icon={MdOutlineEdit} size={24} color={theme.text} />
           </Pressable>
         </View>
 
@@ -270,13 +271,13 @@ export default function BookingScreen() {
                 <ThemedText style={styles.listingName}>{listing.name}</ThemedText>
                 <View style={styles.listingMetaRow}>
                   <View style={styles.listingMeta}>
-                    <Icon name="star" size={18} color={theme.textMuted} />
+                    <Icon icon={MdStarOutline} size={18} color={theme.textMuted} />
                     <ThemedText type="small" themeColor="textMuted">
                       {listing.rating}
                     </ThemedText>
                   </View>
                   <View style={styles.listingMeta}>
-                    <Icon name="map-pin" size={18} color={theme.textMuted} />
+                    <Icon icon={MdOutlineLocationOn} size={18} color={theme.textMuted} />
                     <ThemedText type="small" themeColor="textMuted">
                       {listing.distance}
                     </ThemedText>

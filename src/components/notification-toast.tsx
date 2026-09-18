@@ -2,13 +2,13 @@ import { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Icon, type IconName } from '@/components/icon';
+import { Icon, type IconType } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type NotificationPreview = {
-  icon: IconName;
+  icon: IconType;
   title: string;
   message: string;
 };
@@ -57,7 +57,7 @@ export function NotificationToast({ data, onDismiss, durationMs = 3800 }: Notifi
           onPress={hide}
           style={[styles.toast, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
           <View style={[styles.iconBadge, { backgroundColor: theme.backgroundSelected }]}>
-            <Icon name={data.icon} size={18} color={theme.text} />
+            <Icon icon={data.icon} size={18} color={theme.text} />
           </View>
           <View style={styles.copy}>
             <ThemedText style={styles.title} numberOfLines={1}>
