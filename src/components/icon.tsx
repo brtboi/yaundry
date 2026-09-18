@@ -1,6 +1,9 @@
 import { SvgXml } from 'react-native-svg';
 
 import {
+  arrowDownwardSvg,
+  arrowUpwardSvg,
+  chevronDownSvg,
   commentsSvg,
   editSvg,
   googleLogoSvg,
@@ -51,6 +54,9 @@ const icons = {
   more: moreSvg,
   notifications: notificationsSvg,
   schedule: scheduleSvg,
+  'arrow-upward': arrowUpwardSvg,
+  'arrow-downward': arrowDownwardSvg,
+  'chevron-down': chevronDownSvg,
   warning: warningSvg,
 } as { [K in FillableIconName]: string } & Record<
   | 'google'
@@ -65,6 +71,9 @@ const icons = {
   | 'more'
   | 'notifications'
   | 'schedule'
+  | 'arrow-upward'
+  | 'arrow-downward'
+  | 'chevron-down'
   | 'warning',
   string
 >;

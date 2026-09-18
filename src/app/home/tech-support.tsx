@@ -20,9 +20,9 @@ type IssueOption = {
 const issueOptions: IssueOption[] = [
   { id: 'wont-start', label: "Machine won't start", destination: 'facilities' },
   { id: 'error-code', label: 'Error code / stuck cycle', destination: 'facilities' },
-  { id: 'payment', label: 'Card reader / payment issue', destination: 'facilities' },
   { id: 'broken-other', label: 'Other broken machine', destination: 'facilities' },
-  { id: 'cleanliness', label: 'Laundry room needs cleaning', destination: 'resco' },
+  { id: 'cleanliness', label: 'Room needs cleaning', destination: 'resco' },
+  { id: 'dirty-machine', label: 'Dirty machine', destination: 'resco' },
   { id: 'period-products', label: 'Out of period products', destination: 'resco' },
   { id: 'contraception', label: 'Out of contraception', destination: 'resco' },
   { id: 'other-resco', label: 'Other room issue', destination: 'resco' },
@@ -34,7 +34,7 @@ const destinationCopy: Record<IssueDestination, { label: string; notified: strin
     notified: 'Facilities has been notified. Thanks for the heads up!',
   },
   resco: {
-    label: "Your ResCo's Student Laundry Manager",
+    label: "ResCo Laundry Manager",
     notified: 'Your laundry manager has been notified. Thanks for flagging this!',
   },
 };
@@ -47,6 +47,7 @@ const routingExplainer =
 export default function TechSupportScreen() {
   const theme = useTheme();
   const [resco, setResco] = useState<string>(rescoOptions[0]);
+  const [machine, setMachine] = useState('');
   const [issueId, setIssueId] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState('');
   const [description, setDescription] = useState('');
@@ -60,12 +61,13 @@ export default function TechSupportScreen() {
 
   function handleSubmit() {
     if (!selectedIssue) {
-      Alert.alert('Pick an issue', 'Select what kind of issue you’re reporting first.');
+      Alert.alert('Pick an issue', 'Select what kind of issue you\'re reporting first.');
       return;
     }
 
     Alert.alert('Report submitted', destinationCopy[selectedIssue.destination].notified);
     setIssueId(null);
+    setMachine('');
     setErrorCode('');
     setDescription('');
   }
@@ -79,6 +81,16 @@ export default function TechSupportScreen() {
         <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
           <Field label="RESIDENTIAL COLLEGE">
             <Dropdown value={resco} options={rescoOptions} onChange={setResco} />
+          </Field>
+
+          <Field label="WHICH MACHINE?">
+            <TextInput
+              value={machine}
+              onChangeText={setMachine}
+              placeholder="e.g. Washer 3 or Dryer 5"
+              placeholderTextColor={theme.textMuted}
+              style={[styles.input, { borderColor: theme.cardBorder, color: theme.text }]}
+            />
           </Field>
 
           <View style={styles.field}>
@@ -121,18 +133,15 @@ export default function TechSupportScreen() {
           </View>
 
           {destination === 'facilities' && (
-            <>
-              <SelectField label="MACHINE" value="Select washer or dryer" placeholder />
-              <Field label="ERROR CODE">
-                <TextInput
-                  value={errorCode}
-                  onChangeText={setErrorCode}
-                  placeholder="e.g. E4"
-                  placeholderTextColor={theme.textMuted}
-                  style={[styles.input, { borderColor: theme.cardBorder, color: theme.text }]}
-                />
-              </Field>
-            </>
+            <Field label="ERROR CODE">
+              <TextInput
+                value={errorCode}
+                onChangeText={setErrorCode}
+                placeholder="e.g. E4"
+                placeholderTextColor={theme.textMuted}
+                style={[styles.input, { borderColor: theme.cardBorder, color: theme.text }]}
+              />
+            </Field>
           )}
 
           <Field label="DESCRIPTION (OPTIONAL)">
@@ -234,28 +243,6 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function SelectField({
-  label,
-  value,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  placeholder?: boolean;
-}) {
-  const theme = useTheme();
-  return (
-    <Field label={label}>
-      <View style={[styles.selectBox, { borderColor: theme.cardBorder }]}>
-        <ThemedText themeColor={placeholder ? 'textMuted' : 'text'} style={styles.selectValue}>
-          {value}
-        </ThemedText>
-        <ThemedText themeColor="textMuted">{'›'}</ThemedText>
-      </View>
-    </Field>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -331,18 +318,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginTop: 4,
-  },
-  selectBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-  },
-  selectValue: {
-    fontSize: 15,
   },
   input: {
     borderWidth: 1,

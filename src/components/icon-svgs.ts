@@ -47,6 +47,13 @@ export const notificationsSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="
 
 export const scheduleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960"><path fill="currentColor" d="M513-492v-171q0-13-8.5-21.5T483-693q-13 0-21.5 8.5T453-663v183q0 6 2 11t6 10l144 149q9 10 22.5 9.5T650-310q9-9 9-22t-9-22L513-492ZM480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-82 31.5-155t86-127.5Q252-817 325-848.5T480-880q82 0 155 31.5t127.5 86Q817-708 848.5-635T880-480q0 82-31.5 155t-86 127.5Q708-143 635-111.5T480-80Z"/></svg>`;
 
+export const chevronDownSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960"><path fill="currentColor" d="M467.33-354.41q-5.96-2.48-11.44-7.96L258.13-560.13q-10.2-10.2-9.7-24.37.5-14.17 10.7-24.37 10.2-10.2 24.37-10.2 14.17 0 24.37 10.2L480-435.74l173.13-173.13q10.2-10.2 23.87-9.7 13.67.5 23.87 10.7 10.2 10.2 10.2 24.37 0 14.17-10.2 24.37L504.11-362.37q-5.48 5.48-11.44 7.96-5.95 2.48-12.67 2.48t-12.67-2.48Z"/></svg>`;
+
+// Heavier weight (700) than the rest so the small rank-trend arrows still read clearly.
+export const arrowUpwardSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960"><path fill="currentColor" d="M433-645 235-447q-14 14-33.5 14.5T168-446q-15-14-14.5-34t14.5-34l278-278q7-7 16-11t18-4q9 0 18 4t16 11l279 279q14 15 14 34t-14 33q-15 14-34 14t-33-14L527-645v463q0 20-13.5 33.5T480-135q-20 0-33.5-13.5T433-182v-463Z"/></svg>`;
+
+export const arrowDownwardSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960"><path fill="currentColor" d="M433-315v-463q0-19.88 13.5-33.94Q460-826 480-826t33.5 14.06Q527-797.88 527-778v463l198-198q14-14 33.67-14.58 19.68-.58 33.93 13.5 14.4 14.08 13.9 33.9T792-446L514-168q-7.17 6.91-16.19 10.95-9.03 4.05-17.92 4.05-8.89 0-17.84-4.05Q453.1-161.09 446-168L168-447q-15-15.5-15-34.25T168.23-514q14.07-14 32.92-14T234-514l199 199Z"/></svg>`;
+
 export const warningSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 2.4 22.7 21.3c.28.48.05 1.1-.5 1.1H1.8c-.55 0-.78-.62-.5-1.1L12 2.4Zm0 3.3L3.55 20.4h16.9L12 5.7ZM12.95 9.6h-1.9v5.7h1.9V9.6Zm0 7.05h-1.9V18h1.9v-1.35Z"/></svg>`;
 
 // Brand logo, not a Material Symbol — keep as exported from Figma.

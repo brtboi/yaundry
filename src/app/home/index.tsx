@@ -13,6 +13,7 @@ import { ReminderModal, type ReminderKind } from '@/components/reminder-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
+import { userStats } from '@/constants/user-stats';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   getMachineRating,
@@ -345,6 +346,21 @@ export default function HomeScreen() {
             <Image source={selectedResco.shield} style={styles.shield} contentFit="contain" />
           </ThemedView>
         </Pressable>
+
+        {userStats.trend !== 'same' && (
+          <ThemedView
+            style={[styles.statsBanner, { borderColor: theme.cardBorder, backgroundColor: theme.card }]}>
+            <Icon
+              name={userStats.trend === 'up' ? 'arrow-upward' : 'arrow-downward'}
+              size={20}
+              color={userStats.trend === 'up' ? '#1E8E3E' : '#D93025'}
+            />
+            <ThemedText type="small" style={styles.statsBannerText}>
+              You've gained {userStats.weeklyPointsGained} points and moved {userStats.trend}{' '}
+              {userStats.trendDelta} place{userStats.trendDelta === 1 ? '' : 's'} this week
+            </ThemedText>
+          </ThemedView>
+        )}
 
         <ThemedView style={[styles.card, { borderColor: theme.cardBorder, backgroundColor: theme.card }]}>
           <Pressable onPress={showNextReminderForDemo} accessibilityRole="button" accessibilityLabel="My machines">
@@ -700,6 +716,19 @@ const styles = StyleSheet.create({
   shield: {
     width: 56,
     height: 68,
+  },
+  statsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.three,
+  },
+  statsBannerText: {
+    flex: 1,
+    fontSize: 13,
   },
   card: {
     borderWidth: 1,

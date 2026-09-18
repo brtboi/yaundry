@@ -12,6 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { formatTime, TimePickerModal, type TimeValue } from '@/components/time-picker-modal';
 import { MaxContentWidth, Spacing, WebTopTabBarInset } from '@/constants/theme';
+import { pointsExplainer, userStats } from '@/constants/user-stats';
 import { type ColorSchemeOverride, useColorSchemeOverride } from '@/hooks/color-scheme-context';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -85,6 +86,10 @@ export default function ProfileScreen() {
     }
   }
 
+  function showPointsInfo() {
+    Alert.alert('How points work', pointsExplainer);
+  }
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -97,12 +102,43 @@ export default function ProfileScreen() {
             <View style={styles.avatarWrap}>
               <View style={[styles.avatar, { backgroundColor: theme.backgroundElement }]} />
               <View style={[styles.avatarEditBadge, { backgroundColor: theme.text }]}>
-                <ThemedText style={[styles.avatarEditIcon, { color: theme.background }]}>
-                  ✎
-                </ThemedText>
+                <Icon name="edit" size={13} color={theme.background} />
               </View>
             </View>
-            <ThemedText style={styles.name}>Daniel Jay Park</ThemedText>
+            <ThemedText style={styles.name}>Elihu Yale</ThemedText>
+
+            <View style={styles.statsRow}>
+              <ThemedText type="smallBold">{userStats.points} pts</ThemedText>
+              <View style={[styles.statsDot, { backgroundColor: theme.textMuted }]} />
+              <View style={styles.rankGroup}>
+                <ThemedText type="smallBold">#{userStats.rank}</ThemedText>
+                {userStats.trend !== 'same' && (
+                  <View style={styles.trendGroup}>
+                    <Icon
+                      name={userStats.trend === 'up' ? 'arrow-upward' : 'arrow-downward'}
+                      size={17}
+                      color={userStats.trend === 'up' ? '#1E8E3E' : '#D93025'}
+                    />
+                    <ThemedText
+                      type="smallBold"
+                      style={{ color: userStats.trend === 'up' ? '#1E8E3E' : '#D93025' }}>
+                      {userStats.trendDelta}
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
+              <Pressable
+                onPress={showPointsInfo}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="How do points work?"
+                style={[styles.infoBadge, { backgroundColor: theme.backgroundSelected }]}>
+                <ThemedText type="smallBold" themeColor="textSecondary" style={styles.infoBadgeLabel}>
+                  ?
+                </ThemedText>
+              </Pressable>
+            </View>
+
             <ThemedText type="small" themeColor="textMuted">
               {fruit.emoji} {fruit.name}
             </ThemedText>
@@ -410,6 +446,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 2,
+  },
+  statsDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+  },
+  rankGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  trendGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 1,
+  },
+  infoBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoBadgeLabel: {
+    fontSize: 11,
+    lineHeight: 13,
+  },
   avatarWrap: {
     width: 84,
     height: 84,
@@ -428,9 +496,6 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  avatarEditIcon: {
-    fontSize: 12,
   },
   name: {
     fontSize: 18,

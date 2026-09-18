@@ -45,7 +45,7 @@ export function FruitPickerModal({ visible, selected, onClose, onSelect }: Fruit
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={hide} />
         </Animated.View>
-        <Animated.View style={{ transform: [{ translateY }] }}>
+        <Animated.View style={[styles.sheetWrap, { transform: [{ translateY }] }]}>
           <ThemedView style={[styles.sheet, { backgroundColor: theme.card }]}>
             <View style={styles.handleRow} {...panHandlers}>
               <View style={[styles.handle, { backgroundColor: theme.cardBorder }]} />
@@ -89,7 +89,14 @@ export function FruitPickerModal({ visible, selected, onClose, onSelect }: Fruit
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    justifyContent: 'flex-end',
+  },
+  // Pinned to the bottom edge rather than relying on flex justification, so the sheet always
+  // sits flush against the bottom of the screen no matter how tall its content gets.
+  sheetWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   backdrop: {
     backgroundColor: 'rgba(0,0,0,0.4)',
