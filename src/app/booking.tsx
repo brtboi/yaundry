@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { DimensionValue, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,11 +8,11 @@ import { Icon } from '@/components/icon';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
-import { setSelectedResco, type RescoId } from '@/hooks/use-selected-resco';
+import { laundryInventory, setSelectedResco, type RescoId } from '@/hooks/use-selected-resco';
 import { useTheme } from '@/hooks/use-theme';
 
 type LaundryRoom = {
-  id: string;
+  id: RescoId;
   name: string;
   entryway: string;
   washers: number;
@@ -26,8 +26,7 @@ const laundryRooms: LaundryRoom[] = [
     id: 'trumbull',
     name: 'Trumbull',
     entryway: 'Under Entryway C',
-    washers: 3,
-    dryers: 2,
+    ...laundryInventory.trumbull,
     top: '18%',
     left: '38%',
   },
@@ -35,8 +34,7 @@ const laundryRooms: LaundryRoom[] = [
     id: 'davenport',
     name: 'Davenport',
     entryway: 'Under Entryway G',
-    washers: 3,
-    dryers: 2,
+    ...laundryInventory.davenport,
     top: '30%',
     left: '12%',
   },
@@ -44,8 +42,7 @@ const laundryRooms: LaundryRoom[] = [
     id: 'farnam',
     name: 'Farnam',
     entryway: 'Under Entryway A',
-    washers: 4,
-    dryers: 5,
+    ...laundryInventory.farnam,
     top: '22%',
     left: '78%',
   },
@@ -53,8 +50,7 @@ const laundryRooms: LaundryRoom[] = [
     id: 'pierson',
     name: 'Pierson',
     entryway: 'Under Entryway B',
-    washers: 2,
-    dryers: 1,
+    ...laundryInventory.pierson,
     top: '55%',
     left: '10%',
   },
@@ -62,8 +58,7 @@ const laundryRooms: LaundryRoom[] = [
     id: 'branford',
     name: 'Branford',
     entryway: 'Under Entryway K',
-    washers: 1,
-    dryers: 2,
+    ...laundryInventory.branford,
     top: '70%',
     left: '32%',
   },
@@ -71,8 +66,7 @@ const laundryRooms: LaundryRoom[] = [
     id: 'bingham',
     name: 'Bingham',
     entryway: 'Under Entryway D',
-    washers: 0,
-    dryers: 1,
+    ...laundryInventory.bingham,
     top: '58%',
     left: '84%',
   },
@@ -80,8 +74,7 @@ const laundryRooms: LaundryRoom[] = [
     id: 'saybrook',
     name: 'Saybrook',
     entryway: 'Under Entryway F',
-    washers: 1,
-    dryers: 2,
+    ...laundryInventory.saybrook,
     top: '46%',
     left: '48%',
   },
@@ -118,12 +111,81 @@ const listings: {
     price: '11th',
     priceUnit: '/ 16 Laundry Rooms',
   },
+  {
+    id: 'saybrook',
+    name: 'Saybrook',
+    image: require('@/assets/images/illustrations/booking-listing-saybrook.jpg'),
+    rating: '3895 pts',
+    distance: '1.7 miles',
+    price: '2nd',
+    priceUnit: '/ 16 Laundry Rooms',
+  },
+  {
+    id: 'trumbull',
+    name: 'Trumbull',
+    image: require('@/assets/images/illustrations/booking-listing-trumbull.jpg'),
+    rating: '2800 pts',
+    distance: '0.7 miles',
+    price: '9th',
+    priceUnit: '/ 16 Laundry Rooms',
+  },
+  {
+    id: 'davenport',
+    name: 'Davenport',
+    image: require('@/assets/images/illustrations/booking-listing-davenport.jpg'),
+    rating: '1000 pts',
+    distance: '1.3 miles',
+    price: '12th',
+    priceUnit: '/ 16 Laundry Rooms',
+  },
+  {
+    id: 'pierson',
+    name: 'Pierson',
+    image: require('@/assets/images/illustrations/booking-listing-pierson.jpg'),
+    rating: '700 pts',
+    distance: '0.9 miles',
+    price: '16th',
+    priceUnit: '/ 16 Laundry Rooms',
+  },
+  {
+    id: 'branford',
+    name: 'Branford',
+    image: require('@/assets/images/illustrations/booking-listing-branford.png'),
+    rating: '1200 pts',
+    distance: '0.5 miles',
+    price: '6th',
+    priceUnit: '/ 16 Laundry Rooms',
+  },
+  {
+    id: 'bingham',
+    name: 'Bingham',
+    image: require('@/assets/images/illustrations/booking-listing-bingham.jpg'),
+    rating: '800 pts',
+    distance: '0.3 miles',
+    price: '15th',
+    priceUnit: '/ 16 Laundry Rooms',
+  },
+  {
+    id: 'farnam',
+    name: 'Farnam',
+    image: require('@/assets/images/illustrations/booking-listing-farnam.png'),
+    rating: '1100 pts',
+    distance: '0.2 miles',
+    price: '14th',
+    priceUnit: '/ 16 Laundry Rooms',
+  }
 ];
 
 export default function BookingScreen() {
   const theme = useTheme();
+  const listRef = useRef<ScrollView>(null);
   const [selectedRoomId, setSelectedRoomId] = useState('saybrook');
   const selectedRoom = laundryRooms.find((room) => room.id === selectedRoomId) ?? laundryRooms[0];
+  const orderedListings = useMemo(() => {
+    const selectedListing = listings.find((listing) => listing.id === selectedRoomId);
+    if (!selectedListing) return listings;
+    return [selectedListing, ...listings.filter((listing) => listing.id !== selectedRoomId)];
+  }, [selectedRoomId]);
 
   return (
     <ThemedView style={styles.container}>
@@ -178,7 +240,10 @@ export default function BookingScreen() {
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
                 accessibilityLabel={`${room.name}, ${machineCountLabel(room.washers, 'Washer', 'W')}, ${machineCountLabel(room.dryers, 'Dryer', 'D')}`}
-                onPress={() => setSelectedRoomId(room.id)}
+                onPress={() => {
+                  setSelectedRoomId(room.id);
+                  listRef.current?.scrollTo({ y: 0, animated: true });
+                }}
                 style={[
                   styles.mapChip,
                   selected && styles.mapChipActive,
@@ -193,11 +258,12 @@ export default function BookingScreen() {
         </View>
 
         <ScrollView
+          ref={listRef}
           style={styles.list}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}>
           <View style={[styles.listHandle, { backgroundColor: theme.cardBorder }]} />
-          {listings.map((listing) => (
+          {orderedListings.map((listing) => (
             <View key={listing.id} style={styles.listing}>
               <Image source={listing.image} style={styles.listingImage} contentFit="cover" />
               <View style={styles.listingInfo}>

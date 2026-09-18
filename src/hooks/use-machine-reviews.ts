@@ -71,6 +71,20 @@ export function useMachineReviews() {
   );
 }
 
+export function getMachineRating(
+  items: MachineReview[],
+  kind: MachineKind,
+  machineId: number,
+): number | null {
+  const group = items.filter((item) => item.kind === kind && item.machineId === machineId);
+  if (group.length === 0) return null;
+  return Math.round((group.reduce((sum, item) => sum + item.rating, 0) / group.length) * 10) / 10;
+}
+
+export function formatMachineRating(value: number) {
+  return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1);
+}
+
 export function summarizeMachineReviews(items: MachineReview[]): MachineReviewSummary[] {
   const grouped = new Map<string, MachineReview[]>();
   for (const review of items) {
