@@ -419,9 +419,21 @@ export default function HomeScreen() {
         <ThemedView
           style={[styles.card, styles.availabilityCard, { borderColor: theme.cardBorder, backgroundColor: theme.card }]}>
           <View style={styles.legend}>
-            <LegendItem color={theme.availableText} label="Available" />
-            <LegendItem color={theme.brokenText} label="Unavailable" />
-            <LegendItem color={theme.inUseBorder} label="Mine In Use" />
+            <LegendItem
+              color={theme.available}
+              borderColor={colorWithAlpha(theme.availableText, 0.45)}
+              label="Available"
+            />
+            <LegendItem
+              color={theme.broken}
+              borderColor={colorWithAlpha(theme.brokenText, 0.45)}
+              label="Unavailable"
+            />
+            <LegendItem
+              color={theme.inUse}
+              borderColor={colorWithAlpha(theme.inUseBorder, 0.45)}
+              label="Mine In Use"
+            />
           </View>
 
           <View style={styles.machineGroup}>
@@ -505,10 +517,20 @@ export default function HomeScreen() {
   );
 }
 
-function LegendItem({ color, label }: { color: string; label: string }) {
+// Dots match the machine tile backgrounds for the current theme, with a faint outline in the
+// status text color so the pale (light mode) and dim (dark mode) fills don't disappear.
+function LegendItem({
+  color,
+  borderColor = color,
+  label,
+}: {
+  color: string;
+  borderColor?: string;
+  label: string;
+}) {
   return (
     <View style={styles.legendItem}>
-      <View style={[styles.legendDot, { backgroundColor: color }]} />
+      <View style={[styles.legendDot, { backgroundColor: color, borderColor }]} />
       <ThemedText type="small" themeColor="textMuted">
         {label}
       </ThemedText>
@@ -819,9 +841,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1,
   },
   machineGroup: {
     gap: Spacing.two,
